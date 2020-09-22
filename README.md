@@ -12,23 +12,22 @@ In the bme280_c directory:
 
 To compile the code. execute
 
-```make compile
-```
+```make compile```
+
 
 To run the code, execute
 
-```make all
-```
+```make all```
+
 
 To delete the binary file and clean the output csv, execute
 
-```make clean
-```
+```make clean```
 
 ### BM280 using Python
 
 In the bme280_python directory:
 
 To run the code, execute
-```python3 read_bme280_data.py
-```
+```python3 read_bme280_data.py```
+
