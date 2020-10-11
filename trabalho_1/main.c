@@ -29,28 +29,19 @@ void main()
 	struct sensors_temperature *TI = malloc(sizeof(struct sensors_temperature));
 	struct sensors_temperature *TR = malloc(sizeof(struct sensors_temperature));
 
-	strcpy(TI->sensor, "BME280");
-	strcpy(TI->device, "/dev/i2c-1");
-	TE->command = 0xA1;
-	strcpy(TE->sensor, "LM35");
-	strcpy(TE->device, "/dev/serial0");
-	TR->command = 0xA2;
-	strcpy(TR->sensor, "LM35");
-	strcpy(TR->device, "/dev/serial0");
-	
-	//pthread_create(&(threads[0]), NULL, get_temperature, (void*)TI);
-	//pthread_join(threads[0], NULL);
-	//printf("%f\n", TI->temp);
-	//printf("%f\n", TE->temp);
-	//printf("%f\n", TR->temp);
+	init_sensors(TE, TI, TR);
+
 	while(1){
 		get_temperature((void*)TI);
 		get_temperature((void*)TE);
 		get_temperature((void*)TR);
+
+		menu(TE, TI, TR);
+
 		usleep(500000);
+
 		writeOnCSV(TI->temperature, TE->temperature, TR->temperature);
 
-		printf("\n\nTI: %f, TE: %f, TR: %f\n", TI->temperature, TE->temperature, TR->temperature);
 
 		char* line1text = (char*)malloc(16*sizeof(char));
 		char* line2text = (char*)malloc(16*sizeof(char));

@@ -327,7 +327,7 @@ int8_t get_sensor_data_forced_mode(struct bme280_dev *dev, float *temp)
             return 1;
         }
 		*temp = comp_data.temperature;
-        print_sensor_data(&comp_data);
+        //print_sensor_data(&comp_data);
     //}
 
     return rslt;

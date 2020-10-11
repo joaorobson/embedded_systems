@@ -13,7 +13,7 @@ void get_lm35_temperature(float* temperature, char* device, unsigned char comman
     }
     else
     {
-        printf("UART inicializada!\n");
+        //printf("UART inicializada!\n");
     }    
     struct termios options;
     tcgetattr(uart0_filestream, &options);
@@ -34,11 +34,11 @@ void get_lm35_temperature(float* temperature, char* device, unsigned char comman
     *p_tx_buffer++ = 0;
     *p_tx_buffer++ = 3;
 
-    printf("Buffers de memória criados!\n");
+    //printf("Buffers de memória criados!\n");
     
     if (uart0_filestream != -1)
     {
-        printf("Escrevendo caracteres na UART ...");
+        //printf("Escrevendo caracteres na UART ...");
         int count = write(uart0_filestream, &tx_buffer[0], (p_tx_buffer - &tx_buffer[0]));
         if (count < 0)
         {
@@ -46,7 +46,7 @@ void get_lm35_temperature(float* temperature, char* device, unsigned char comman
         }
         else
         {
-            printf("escrito.\n");
+            //printf("escrito.\n");
         }
     }
 
@@ -72,7 +72,7 @@ void get_lm35_temperature(float* temperature, char* device, unsigned char comman
             //Bytes received
             rx_buffer[rx_length] = '\0';
 			*temperature = (*(float*)rx_buffer);
-            printf("%i Bytes lidos : %f\n", rx_length, *temperature);
+            //printf("%i Bytes lidos : %f\n", rx_length, *temperature);
         }
     }
 
