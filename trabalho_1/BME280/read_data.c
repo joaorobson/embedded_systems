@@ -131,13 +131,8 @@ int8_t get_sensor_data_forced_mode(struct bme280_dev *dev, float *temp);
  * @brief This function starts execution of the program.
  */
 
-struct temps{
-	float temp;
-	char device[15];
-};
-void* get_temperature(void* args)
+void get_bme280_temperature(float* temperature, char* device)
 {
-	struct temps *argss = (struct temps*) args;
     struct bme280_dev dev;
 
     struct identifier id;
@@ -154,9 +149,9 @@ void* get_temperature(void* args)
     //    exit(1);
     //}
 
-    if ((id.fd = open(argss->device, O_RDWR)) < 0)
+    if ((id.fd = open(device, O_RDWR)) < 0)
     {
-        fprintf(stderr, "Failed to open the i2c bus %s\n", argss->device);
+        fprintf(stderr, "Failed to open the i2c bus %s\n", device);
         exit(1);
     }
 
@@ -182,7 +177,7 @@ void* get_temperature(void* args)
         fprintf(stderr, "Failed to initialize the device (code %+d).\n", rslt);
         exit(1);
     }
-    rslt = get_sensor_data_forced_mode(&dev, &argss->temp);
+    rslt = get_sensor_data_forced_mode(&dev, temperature);
     if (rslt != BME280_OK)
     {
         fprintf(stderr, "Failed to stream sensor data (code %+d).\n", rslt);
@@ -253,7 +248,7 @@ void print_sensor_data(struct bme280_data *comp_data)
     temp = 0.01f * comp_data->temperature;
 #endif
 #endif
-    printf("%0.2lf deg C\n", temp);
+    printf("Temperature BME280: %0.2lf deg C\n\n\n", temp);
 }
 
 /*!
@@ -307,8 +302,6 @@ int8_t get_sensor_data_forced_mode(struct bme280_dev *dev, float *temp)
         return rslt;
     }
 
-    printf("Temperature\n");
-
     /*Calculate the minimum delay required between consecutive measurement based upon the sensor enabled
      *  and the oversampling configuration. */
     req_delay = bme280_cal_meas_delay(&dev->settings);
@@ -326,7 +319,7 @@ int8_t get_sensor_data_forced_mode(struct bme280_dev *dev, float *temp)
 
         /* Wait for the measurement to complete and print data */
         dev->delay_us(req_delay, dev->intf_ptr);
-				sleep(1);
+		sleep(1);
         rslt = bme280_get_sensor_data(BME280_ALL, &comp_data, dev);
         if (rslt != BME280_OK)
         {

@@ -1,5 +1,29 @@
 #include <time.h>
+#include "BME280/bme280.c"
+#include "BME280/read_data.c"
+#include "LM35/read_data.c"
 
+
+struct sensors_temperature{
+	float temperature;
+	unsigned char command;
+	char device[20];
+	char sensor[20];
+};
+
+void* get_temperature(void* args){
+	struct sensors_temperature *temp_args = (struct sensors_temperature*) args;
+	
+	if(strcmp(temp_args->sensor, "BME280") == 0){
+			get_bme280_temperature(&temp_args->temperature,
+                                   temp_args->device);
+	}
+	else if(strcmp(temp_args->sensor, "LM35") == 0){
+			get_lm35_temperature(&temp_args->temperature,
+								 temp_args->device,
+                                 temp_args->command);
+	}
+}
 
 char* get_datetime()
 {

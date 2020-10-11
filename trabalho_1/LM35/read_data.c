@@ -3,17 +3,10 @@
 #include <fcntl.h>          //Used for UART
 #include <termios.h>        //Used for UART
 
-struct t{
-	float temp;
-	char device[15];
-	unsigned char command;
-};
-void* get_uart_temperature(void* args) {
-struct t *argss = (struct t*) args;
+void get_lm35_temperature(float* temperature, char* device, unsigned char command) {
     int uart0_filestream = -1;
-	float temperature = 0.0;
 
-    uart0_filestream = open("/dev/serial0", O_RDWR | O_NOCTTY | O_NDELAY | O_NONBLOCK);      //Open in non blocking read/write mode
+    uart0_filestream = open(device, O_RDWR | O_NOCTTY | O_NDELAY | O_NONBLOCK);      //Open in non blocking read/write mode
     if (uart0_filestream == -1)
     {
         printf("Erro - Não foi possível iniciar a UART.\n");
@@ -35,7 +28,7 @@ struct t *argss = (struct t*) args;
     unsigned char *p_tx_buffer;
     
     p_tx_buffer = &tx_buffer[0];
-    *p_tx_buffer++ = argss->command;
+    *p_tx_buffer++ = command;
     *p_tx_buffer++ = 4;
     *p_tx_buffer++ = 0;
     *p_tx_buffer++ = 0;
@@ -78,7 +71,7 @@ struct t *argss = (struct t*) args;
         {
             //Bytes received
             rx_buffer[rx_length] = '\0';
-			argss->temp = (*(float*)rx_buffer);
+			*temperature = (*(float*)rx_buffer);
             printf("%i Bytes lidos : %f\n", rx_length, temperature);
         }
     }
