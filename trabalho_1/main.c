@@ -11,12 +11,8 @@ void main()
 //        return 1; 
 //    } 
 //  
-//	pthread_t threads[3];
-//	strcpy(TI->device, "/dev/i2c-1");
-//	TE->command = 0xA1;
-//	TR->command = 0xA2;
-//	pthread_create(&(threads[0]), NULL, get_temperature, (void*)TI);
-//	pthread_join(threads[0], NULL);
+	pthread_t threads[3];
+
 //	pthread_mutex_lock(&lock); 
 //	pthread_create(&(threads[1]), NULL, get_uart_temperature, (void*)TE);
 //	pthread_join(threads[1], NULL);
@@ -42,24 +38,25 @@ void main()
 	strcpy(TR->sensor, "LM35");
 	strcpy(TR->device, "/dev/serial0");
 	
+	//pthread_create(&(threads[0]), NULL, get_temperature, (void*)TI);
+	//pthread_join(threads[0], NULL);
 	//printf("%f\n", TI->temp);
 	//printf("%f\n", TE->temp);
 	//printf("%f\n", TR->temp);
-
 	while(1){
 		get_temperature((void*)TI);
 		get_temperature((void*)TE);
 		get_temperature((void*)TR);
-		printf("T\n\nI: %f, TE: %f, TR: %f\n", TI->temperature, TE->temperature, TR->temperature);
+		usleep(500000);
+		writeOnCSV(TI->temperature, TE->temperature, TR->temperature);
+
+		printf("\n\nTI: %f, TE: %f, TR: %f\n", TI->temperature, TE->temperature, TR->temperature);
 
 		char* line1text = (char*)malloc(16*sizeof(char));
 		char* line2text = (char*)malloc(16*sizeof(char));
-		sprintf(line1text, "TI:%.2f TE:%.2f", TI->temperature, TE->temperature); 
+		sprintf(line1text, "TI:%.2fTE:%.2f", TI->temperature, TE->temperature); 
 		sprintf(line2text, "TR: %.2f", TR->temperature); 
 		
 		writeOnLCD(line1text, line2text);
-		writeOnCSV(TI->temperature, TE->temperature, TR->temperature);
 	}
-
-
 }

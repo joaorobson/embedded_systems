@@ -50,7 +50,7 @@ void get_lm35_temperature(float* temperature, char* device, unsigned char comman
         }
     }
 
-    sleep(1);
+    usleep(500000);
 
     //----- CHECK FOR ANY RX BYTES -----
     if (uart0_filestream != -1)
@@ -72,7 +72,7 @@ void get_lm35_temperature(float* temperature, char* device, unsigned char comman
             //Bytes received
             rx_buffer[rx_length] = '\0';
 			*temperature = (*(float*)rx_buffer);
-            printf("%i Bytes lidos : %f\n", rx_length, temperature);
+            printf("%i Bytes lidos : %f\n", rx_length, *temperature);
         }
     }
 
