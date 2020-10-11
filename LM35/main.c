@@ -3,8 +3,13 @@
 #include <fcntl.h>          //Used for UART
 #include <termios.h>        //Used for UART
 
-float get_uart_temperature(unsigned char command) {
-
+struct t{
+	float temp;
+	char device[15];
+	unsigned char command;
+};
+void* get_uart_temperature(void* args) {
+struct t *argss = (struct t*) args;
     int uart0_filestream = -1;
 	float temperature = 0.0;
 
@@ -30,7 +35,7 @@ float get_uart_temperature(unsigned char command) {
     unsigned char *p_tx_buffer;
     
     p_tx_buffer = &tx_buffer[0];
-    *p_tx_buffer++ = command;
+    *p_tx_buffer++ = argss->command;
     *p_tx_buffer++ = 4;
     *p_tx_buffer++ = 0;
     *p_tx_buffer++ = 0;
@@ -73,12 +78,11 @@ float get_uart_temperature(unsigned char command) {
         {
             //Bytes received
             rx_buffer[rx_length] = '\0';
-			temperature = (*(float*)rx_buffer);
+			argss->temp = (*(float*)rx_buffer);
             printf("%i Bytes lidos : %f\n", rx_length, temperature);
         }
     }
 
     close(uart0_filestream);
-	return temperature;
 }
 

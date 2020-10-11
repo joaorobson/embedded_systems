@@ -130,8 +130,14 @@ int8_t get_sensor_data_forced_mode(struct bme280_dev *dev, float *temp);
 /*!
  * @brief This function starts execution of the program.
  */
-float get_temperature(char* device)
+
+struct temps{
+	float temp;
+	char device[15];
+};
+void* get_temperature(void* args)
 {
+	struct temps *argss = (struct temps*) args;
     struct bme280_dev dev;
 
     struct identifier id;
@@ -148,9 +154,9 @@ float get_temperature(char* device)
     //    exit(1);
     //}
 
-    if ((id.fd = open(device, O_RDWR)) < 0)
+    if ((id.fd = open(argss->device, O_RDWR)) < 0)
     {
-        fprintf(stderr, "Failed to open the i2c bus %s\n", device);
+        fprintf(stderr, "Failed to open the i2c bus %s\n", argss->device);
         exit(1);
     }
 
@@ -176,15 +182,12 @@ float get_temperature(char* device)
         fprintf(stderr, "Failed to initialize the device (code %+d).\n", rslt);
         exit(1);
     }
-		float temp = 0.0;
-    rslt = get_sensor_data_forced_mode(&dev, &temp);
+    rslt = get_sensor_data_forced_mode(&dev, &argss->temp);
     if (rslt != BME280_OK)
     {
         fprintf(stderr, "Failed to stream sensor data (code %+d).\n", rslt);
         exit(1);
     }
-
-    return temp;
 }
 
 /*!
@@ -330,7 +333,7 @@ int8_t get_sensor_data_forced_mode(struct bme280_dev *dev, float *temp)
             fprintf(stderr, "Failed to get sensor data (code %+d).", rslt);
             return 1;
         }
-				*temp = comp_data.temperature;
+		*temp = comp_data.temperature;
         print_sensor_data(&comp_data);
     //}
 
