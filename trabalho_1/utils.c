@@ -2,6 +2,7 @@
 #include "BME280/bme280.c"
 #include "BME280/read_data.c"
 #include "UART/read_data.c"
+#include "BCM2835/control_temperature.c"
 
 
 struct sensors_temperature{
@@ -55,15 +56,15 @@ void writeOnCSV(float TI, float TE, float TR)
 
 }
 
-void init_sensors(struct sensors_temperature *TE,
+void initSensors(struct sensors_temperature *TE,
                   struct sensors_temperature *TI,
                   struct sensors_temperature *TR){
 
-	strcpy(TI->sensor, "BME280");
-	strcpy(TI->device, "/dev/i2c-1");
-	TE->command = 0xA1;
-	strcpy(TE->sensor, "LM35");
-	strcpy(TE->device, "/dev/serial0");
+	strcpy(TE->sensor, "BME280");
+	strcpy(TE->device, "/dev/i2c-1");
+	TI->command = 0xA1;
+	strcpy(TI->sensor, "LM35");
+	strcpy(TI->device, "/dev/serial0");
 	TR->command = 0xA2;
 	strcpy(TR->sensor, "LM35");
 	strcpy(TR->device, "/dev/serial0");
@@ -76,4 +77,39 @@ void menu(struct sensors_temperature *TE,
     system("@cls||clear");
     printf("\n\nTI: %f, TE: %f, TR: %f\n", TI->temperature, TE->temperature, TR->temperature);
     printf("Selecione uma opção:\n1 - Definir temperatura de referência\n2 - Sair\n");
+}
+
+void initCoolerAndResistor(){
+	controlTemperature("COOLER", "OFF");
+	controlTemperature("RESISTOR", "OFF");
+
+}
+void keepTemperature(float hysteresis,
+					 struct sensors_temperature *TI,
+					 struct sensors_temperature *TR,
+					 int* coolerIsOn,
+					 int* resistorIsOn)
+{
+	float upperLimit = TR->temperature + (hysteresis/2.0);
+	float lowerLimit = TR->temperature - (hysteresis/2.0);
+
+	if((TI->temperature > upperLimit) && *coolerIsOn == 0){
+		controlTemperature("COOLER", "ON");
+		*coolerIsOn = 1;
+	}
+	else if((TI->temperature < lowerLimit) && *coolerIsOn == 0){
+		controlTemperature("RESISTOR", "ON");
+		*resistorIsOn = 1;
+	}
+
+	if((TI->temperature < upperLimit) && (TI->temperature > lowerLimit)){
+		if(*coolerIsOn == 1){
+			controlTemperature("COOLER", "OFF");
+			*coolerIsOn == 0;
+		}
+		if(*resistorIsOn == 1){
+			controlTemperature("RESISTOR", "OFF");
+			*resistorIsOn == 0;
+		}
+	}
 }

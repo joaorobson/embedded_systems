@@ -29,12 +29,22 @@ void main()
 	struct sensors_temperature *TI = malloc(sizeof(struct sensors_temperature));
 	struct sensors_temperature *TR = malloc(sizeof(struct sensors_temperature));
 
-	init_sensors(TE, TI, TR);
+	int coolerIsOn, resistorIsOn;
+	coolerIsOn = 0;
+	resistorIsOn = 0;
+	float hysteresis = 4.0;
+
+	initSensors(TE, TI, TR);
+	initCoolerAndResistor();
+
+	TR->temperature = 42.0;
 
 	while(1){
+		//get_temperature((void*)TI);
+		pthread_create(&(threads[0]), NULL, get_temperature, (void*)TE);
+		pthread_join(threads[0], NULL);
 		get_temperature((void*)TI);
-		get_temperature((void*)TE);
-		get_temperature((void*)TR);
+		//get_temperature((void*)TR);
 
 		menu(TE, TI, TR);
 
@@ -49,5 +59,6 @@ void main()
 		sprintf(line2text, "TR: %.2f", TR->temperature); 
 		
 		writeOnLCD(line1text, line2text);
+		keepTemperature(hysteresis, TI, TR, &coolerIsOn, &resistorIsOn);
 	}
 }
