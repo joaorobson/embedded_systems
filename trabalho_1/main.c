@@ -1,8 +1,17 @@
 #include "LCD/lcd.c"
 #include "utils.c"
 #include <pthread.h>
+#include <signal.h>
 
 pthread_mutex_t lock;
+
+volatile sig_atomic_t stop; 
+void
+stopWhile(int signum)
+{
+    stop = 1;
+}
+
 
 void main()
 {
@@ -35,16 +44,21 @@ void main()
 	float hysteresis = 4.0;
 
 	initSensors(TE, TI, TR);
-	initCoolerAndResistor();
+	resetCoolerAndResistor();
+	setupLCD();
 
-	TR->temperature = 42.0;
+	//TR->temperature = 49.0;
 
-	while(1){
-		//get_temperature((void*)TI);
-		pthread_create(&(threads[0]), NULL, get_temperature, (void*)TE);
-		pthread_join(threads[0], NULL);
+	signal(SIGINT, stopWhile);
+
+	while(!stop){
+		get_temperature((void*)TE);
+		//pthread_create(&(threads[0]), NULL, get_temperature, (void*)TE);
+		//pthread_create(&(threads[1]), NULL, get_temperature, (void*)TE);
+		//pthread_create(&(threads[2]), NULL, get_temperature, (void*)TE);
+		//pthread_join(threads[0], NULL);
 		get_temperature((void*)TI);
-		//get_temperature((void*)TR);
+		get_temperature((void*)TR);
 
 		menu(TE, TI, TR);
 
@@ -61,4 +75,5 @@ void main()
 		writeOnLCD(line1text, line2text);
 		keepTemperature(hysteresis, TI, TR, &coolerIsOn, &resistorIsOn);
 	}
+	resetCoolerAndResistor();
 }

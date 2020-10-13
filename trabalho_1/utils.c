@@ -56,6 +56,7 @@ void writeOnCSV(float TI, float TE, float TR)
 
 }
 
+
 void initSensors(struct sensors_temperature *TE,
                   struct sensors_temperature *TI,
                   struct sensors_temperature *TR){
@@ -79,7 +80,7 @@ void menu(struct sensors_temperature *TE,
     printf("Selecione uma opção:\n1 - Definir temperatura de referência\n2 - Sair\n");
 }
 
-void initCoolerAndResistor(){
+void resetCoolerAndResistor(){
 	controlTemperature("COOLER", "OFF");
 	controlTemperature("RESISTOR", "OFF");
 
@@ -93,23 +94,24 @@ void keepTemperature(float hysteresis,
 	float upperLimit = TR->temperature + (hysteresis/2.0);
 	float lowerLimit = TR->temperature - (hysteresis/2.0);
 
-	if((TI->temperature > upperLimit) && *coolerIsOn == 0){
-		controlTemperature("COOLER", "ON");
-		*coolerIsOn = 1;
-	}
-	else if((TI->temperature < lowerLimit) && *coolerIsOn == 0){
-		controlTemperature("RESISTOR", "ON");
-		*resistorIsOn = 1;
-	}
-
-	if((TI->temperature < upperLimit) && (TI->temperature > lowerLimit)){
-		if(*coolerIsOn == 1){
-			controlTemperature("COOLER", "OFF");
-			*coolerIsOn == 0;
+	if(TI->temperature > upperLimit){
+		if(*coolerIsOn == 0){
+			controlTemperature("COOLER", "ON");
+			*coolerIsOn = 1;
 		}
 		if(*resistorIsOn == 1){
 			controlTemperature("RESISTOR", "OFF");
-			*resistorIsOn == 0;
+			*resistorIsOn = 0;
+		}
+	}
+	else if(TI->temperature < lowerLimit){
+		if(*coolerIsOn == 1){
+			controlTemperature("COOLER", "OFF");
+			*coolerIsOn = 0;
+		}
+		if(*resistorIsOn == 0){
+			controlTemperature("RESISTOR", "ON");
+			*resistorIsOn = 1;
 		}
 	}
 }
