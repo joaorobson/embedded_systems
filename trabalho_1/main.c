@@ -3,7 +3,7 @@
 #include <pthread.h>
 #include <signal.h>
 
-pthread_mutex_t lock;
+pthread_mutex_t mutex;
 
 volatile sig_atomic_t stop; 
 void
@@ -51,14 +51,20 @@ void main()
 
 	signal(SIGINT, stopWhile);
 
+	pthread_mutex_init(&mutex, NULL);
+	TR->mutex = mutex;
+	TI->mutex = mutex;
+
 	while(!stop){
-		get_temperature((void*)TE);
-		//pthread_create(&(threads[0]), NULL, get_temperature, (void*)TE);
-		//pthread_create(&(threads[1]), NULL, get_temperature, (void*)TE);
-		//pthread_create(&(threads[2]), NULL, get_temperature, (void*)TE);
-		//pthread_join(threads[0], NULL);
-		get_temperature((void*)TI);
-		get_temperature((void*)TR);
+		//get_temperature((void*)TE);
+		pthread_create(&(threads[0]), NULL, get_temperature, (void*)TE);
+		pthread_create(&(threads[1]), NULL, get_temperature, (void*)TR);
+		pthread_create(&(threads[2]), NULL, get_temperature, (void*)TI);
+		pthread_join(threads[0], NULL);
+		pthread_join(threads[1], NULL);
+		pthread_join(threads[2], NULL);
+		//get_temperature((void*)TI);
+		//get_temperature((void*)TR);
 
 		menu(TE, TI, TR);
 
@@ -75,5 +81,6 @@ void main()
 		writeOnLCD(line1text, line2text);
 		keepTemperature(hysteresis, TI, TR, &coolerIsOn, &resistorIsOn);
 	}
+	pthread_mutex_destroy(&mutex);
 	resetCoolerAndResistor();
 }

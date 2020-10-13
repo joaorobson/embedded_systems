@@ -1,4 +1,5 @@
 #include <time.h>
+#include <pthread.h>
 #include "BME280/bme280.c"
 #include "BME280/read_data.c"
 #include "UART/read_data.c"
@@ -10,6 +11,7 @@ struct sensors_temperature{
 	unsigned char command;
 	char device[20];
 	char sensor[20];
+	pthread_mutex_t mutex;
 };
 
 void* get_temperature(void* args){
@@ -19,10 +21,12 @@ void* get_temperature(void* args){
 			get_bme280_temperature(&temp_args->temperature,
                                    temp_args->device);
 	}
-	else if(strcmp(temp_args->sensor, "LM35") == 0){
+	else if(strcmp(temp_args->sensor, "UART") == 0){
+			pthread_mutex_lock(&temp_args->mutex);
 			get_lm35_temperature(&temp_args->temperature,
 								 temp_args->device,
                                  temp_args->command);
+			pthread_mutex_unlock(&temp_args->mutex);
 	}
 }
 
@@ -64,10 +68,10 @@ void initSensors(struct sensors_temperature *TE,
 	strcpy(TE->sensor, "BME280");
 	strcpy(TE->device, "/dev/i2c-1");
 	TI->command = 0xA1;
-	strcpy(TI->sensor, "LM35");
+	strcpy(TI->sensor, "UART");
 	strcpy(TI->device, "/dev/serial0");
 	TR->command = 0xA2;
-	strcpy(TR->sensor, "LM35");
+	strcpy(TR->sensor, "UART");
 	strcpy(TR->device, "/dev/serial0");
 	
 }
