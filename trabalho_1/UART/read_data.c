@@ -3,7 +3,8 @@
 #include <fcntl.h>          //Used for UART
 #include <termios.h>        //Used for UART
 
-void get_lm35_temperature(float* temperature, char* device, unsigned char command) {
+void read_data(float* temperature, char *device, unsigned char command){
+
     int uart0_filestream = -1;
 
     uart0_filestream = open(device, O_RDWR | O_NOCTTY | O_NDELAY | O_NONBLOCK);      //Open in non blocking read/write mode
@@ -77,5 +78,10 @@ void get_lm35_temperature(float* temperature, char* device, unsigned char comman
     }
 
     close(uart0_filestream);
+
+
 }
 
+void get_uart_temperature(float* temperature, char* device, unsigned char command) {
+	read_data(temperature, device, command);
+}

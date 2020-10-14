@@ -127,27 +127,11 @@ int8_t user_i2c_write(uint8_t reg_addr, const uint8_t *data, uint32_t len, void 
  */
 int8_t get_sensor_data_forced_mode(struct bme280_dev *dev, float *temp);
 
-/*!
- * @brief This function starts execution of the program.
- */
+struct identifier open_device(struct identifier id, char* device){
 
-void get_bme280_temperature(float* temperature, char* device)
-{
-    struct bme280_dev dev;
-
-    struct identifier id;
 
     /* Make sure to select BME280_I2C_ADDR_PRIM or BME280_I2C_ADDR_SEC as needed */
     id.dev_addr = BME280_I2C_ADDR_PRIM;
-
-    /* Variable to define the result */
-    int8_t rslt = BME280_OK;
-
-    //if (argc < 2)
-    //{
-    //    fprintf(stderr, "Missing argument for i2c bus.\n");
-    //    exit(1);
-    //}
 
     if ((id.fd = open(device, O_RDWR)) < 0)
     {
@@ -160,23 +144,76 @@ void get_bme280_temperature(float* temperature, char* device)
         fprintf(stderr, "Failed to acquire bus access and/or talk to slave.\n");
         exit(1);
     }
+    return id;
+}
+
+struct bme280_dev set_bme280_configs(char* device){
+
+	struct bme280_dev *dev = malloc(sizeof(struct bme280_dev));
+
+	struct identifier *id = malloc(sizeof(struct identifier));
+
+    /* Make sure to select BME280_I2C_ADDR_PRIM or BME280_I2C_ADDR_SEC as needed */
+    id->dev_addr = BME280_I2C_ADDR_PRIM;
+
+    /* Variable to define the result */
+    int8_t rslt = BME280_OK;
+
+    if ((id->fd = open(device, O_RDWR)) < 0)
+    {
+        fprintf(stderr, "Failed to open the i2c bus %s\n", device);
+        exit(1);
+    }
+
+    if (ioctl(id->fd, I2C_SLAVE, id->dev_addr) < 0)
+    {
+        fprintf(stderr, "Failed to acquire bus access and/or talk to slave.\n");
+        exit(1);
+    }
 
 
-    dev.intf = BME280_I2C_INTF;
-    dev.read = user_i2c_read;
-    dev.write = user_i2c_write;
-    dev.delay_us = user_delay_us;
+    dev->intf = BME280_I2C_INTF;
+    dev->read = user_i2c_read;
+    dev->write = user_i2c_write;
+    dev->delay_us = user_delay_us;
 
     /* Update interface pointer with the structure that contains both device address and file descriptor */
-    dev.intf_ptr = &id;
+    dev->intf_ptr = id;
 
     /* Initialize the bme280 */
-    rslt = bme280_init(&dev);
+    rslt = bme280_init(dev);
     if (rslt != BME280_OK)
     {
         fprintf(stderr, "Failed to initialize the device (code %+d).\n", rslt);
         exit(1);
     }
+	return *dev;
+}
+/*!
+ * @brief This function starts execution of the program.
+ */
+
+void get_bme280_temperature(float* temperature, char* device, struct identifier id, struct bme280_dev dev)
+{
+    /* Variable to define the result */
+    int8_t rslt = BME280_OK;
+    ///* Variable to define the result */
+
+    //dev.intf = BME280_I2C_INTF;
+    //dev.read = user_i2c_read;
+    //dev.write = user_i2c_write;
+    //dev.delay_us = user_delay_us;
+
+    ///* Update interface pointer with the structure that contains both device address and file descriptor */
+    //dev.intf_ptr = &id;
+
+    ///* Initialize the bme280 */
+    //rslt = bme280_init(&dev);
+    //if (rslt != BME280_OK)
+    //{
+    //    fprintf(stderr, "Failed to initialize the device (code %+d).\n", rslt);
+    //    exit(1);
+    //}
     rslt = get_sensor_data_forced_mode(&dev, temperature);
     if (rslt != BME280_OK)
     {
@@ -304,31 +341,27 @@ int8_t get_sensor_data_forced_mode(struct bme280_dev *dev, float *temp)
 
     /*Calculate the minimum delay required between consecutive measurement based upon the sensor enabled
      *  and the oversampling configuration. */
-    req_delay = bme280_cal_meas_delay(&dev->settings);
+    //req_delay = bme280_cal_meas_delay(&dev->settings);
 
-    /* Continuously stream sensor data */
-    //while (1)
-    //{
-        /* Set the sensor to forced mode */
-        rslt = bme280_set_sensor_mode(BME280_FORCED_MODE, dev);
-        if (rslt != BME280_OK)
-        {
-            fprintf(stderr, "Failed to set sensor mode (code %+d).", rslt);
-            return 1;
-        }
+    /* Set the sensor to forced mode */
+    rslt = bme280_set_sensor_mode(BME280_FORCED_MODE, dev);
+    if (rslt != BME280_OK)
+    {
+        fprintf(stderr, "Failed to set sensor mode (code %+d).", rslt);
+        return 1;
+    }
 
-        /* Wait for the measurement to complete and print data */
-        dev->delay_us(req_delay, dev->intf_ptr);
-		usleep(500000 - req_delay);
-        rslt = bme280_get_sensor_data(BME280_ALL, &comp_data, dev);
-        if (rslt != BME280_OK)
-        {
-            fprintf(stderr, "Failed to get sensor data (code %+d).", rslt);
-            return 1;
-        }
-		*temp = comp_data.temperature;
-        //print_sensor_data(&comp_data);
-    //}
+    /* Wait for the measurement to complete and print data */
+    dev->delay_us(5e5, dev->intf_ptr);
+
+    rslt = bme280_get_sensor_data(BME280_ALL, &comp_data, dev);
+    if (rslt != BME280_OK)
+    {
+        fprintf(stderr, "Failed to get sensor data (code %+d).", rslt);
+        return 1;
+    }
+    *temp = comp_data.temperature;
+    //print_sensor_data(&comp_data);
 
     return rslt;
 }
