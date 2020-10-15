@@ -17,6 +17,7 @@ struct uart {
 	unsigned char get_TI_command;
 	unsigned char get_TR_command;
 	char device[20];
+    int read_TR;
 };
 
 struct temp_control {
@@ -48,9 +49,11 @@ void* get_uart_temperatures(void* args){
                          temp_args->device,
                          temp_args->get_TI_command);
 
-    get_uart_temperature(&temp_args->TR,
-                         temp_args->device,
-                         temp_args->get_TR_command);
+    if(temp_args->read_TR){
+        get_uart_temperature(&temp_args->TR,
+                             temp_args->device,
+                             temp_args->get_TR_command);
+    }
 }
 
 char* get_datetime()
@@ -86,7 +89,6 @@ void write_on_CSV(void* args)
 
 void write_on_console(void* args){
 	struct temp_control *temp_args = (struct temp_control*) args;
-    system("clear");
 
     printf("\n\nTI: %f, TE: %f, TR: %f\n", temp_args->UART->TI, temp_args->BME280->temperature, temp_args->UART->TR);
 }
@@ -102,7 +104,7 @@ void write_on_LCD(void* args){
 }
 
 void output_temperatures(void *args){
-    //write_on_LCD(args);
+    write_on_LCD(args);
     write_on_console(args);
 }
 
@@ -125,21 +127,38 @@ void resetCoolerAndResistor(){
 	controlTemperature("RESISTOR", "OFF");
 }
 
-//void menu(struct UART *T_UART){
-//    int option = 0;
-//    printf("Deseja inserir temperatura de referência?\n1 - S\n2 - N\n");
-//    scanf("%d", &option);
-//    if(option == 1){
-//        printf("Insira a TR:\n");
-//     
-//        
-//    }
-//    
-//    printf("Insira a temperatura de referência desejada\n");
-//    scanf("%, &T_UART->TR);
-//    printf("Insira a temperatura de referência desejada: %f\n", &T_UART->TR);
-//
-//}
+void menu(struct uart *T_UART, struct temp_control *T_CONTROL){
+    int option = 0;
+    printf("Deseja inserir temperatura de referência?\n1 - S\n2 - N\n");
+    scanf("%d", &option);
+    printf("%d\n", option);
+    if(option == 1){
+        printf("Insira a TR:\n");
+        scanf("%f", &T_UART->TR);
+        T_UART->read_TR = 0;
+    }
+    else if(option == 2){
+        T_UART->read_TR = 1;
+    }
+    else{
+        printf("Valor inválido!!\n");
+        exit(1);
+    }
+    option = 0;
+    printf("Deseja inserir a histerese?\n1 - S\n2 - N\n");
+    scanf("%d", &option);
+    if(option == 1){
+        printf("Insira a TR:\n");
+        scanf("%f", &T_CONTROL->hysteresis);
+    }
+    else if(option == 2){
+        T_CONTROL->hysteresis = 4.0;
+    }
+    else{
+        printf("Valor inválido!!\n");
+        exit(1);
+    }
+}
 
 void keep_temperature(struct temp_control *TC)
 {

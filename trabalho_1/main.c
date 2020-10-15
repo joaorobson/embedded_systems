@@ -3,21 +3,21 @@
 #include <pthread.h>
 #include <signal.h>
 #include <stdbool.h>
+#include <unistd.h>
 
 pthread_mutex_t mutex1, mutex2, mutex3, mutex4, mutex5;
 pthread_cond_t condition1, condition2, condition3, condition4, condition5;
 
-pthread_t threads[5];
-volatile int csv_counter = 0;
-volatile int run_read_bme_thread = 0,
-			 run_read_uart_thread = 0, 
-			 run_write_csv_thread = 0,
-			 run_output_temp_thread = 0,
-			 run_keep_temp_thread = 0;
-volatile sig_atomic_t stop; 
+int csv_counter = 0;
+int run_read_bme_thread = 0;
+int run_read_uart_thread = 0; 
+int run_write_csv_thread = 0;
+int run_output_temp_thread = 0;
+int run_keep_temp_thread = 0;
+volatile sig_atomic_t run = 1; 
 
 void stopWhile(int signum){
-    stop = 1;
+    run = 0;
 }
 
 void* read_uart_thread(void* args){
@@ -73,7 +73,6 @@ void* output_temperatures_thread(void* args){
 	pthread_mutex_unlock(&mutex5);
 }
 void sig_handler(int signum) {
-
     pthread_mutex_lock(&mutex1);
 
     if(run_read_uart_thread == 0){ 
@@ -111,27 +110,16 @@ void sig_handler(int signum) {
     } 
     pthread_mutex_unlock(&mutex5);
 
-	ualarm(5e5, 0);
+	ualarm(5e5, 5e5);
 }
 
 
-void main()
+void main(int argc, char ** argv)
 {
-	pthread_mutex_init(&mutex1, NULL);
-	pthread_mutex_init(&mutex2, NULL);
-	pthread_mutex_init(&mutex3, NULL);
-	pthread_mutex_init(&mutex4, NULL);
-	pthread_mutex_init(&mutex5, NULL);
-	pthread_cond_init (&condition1, NULL);
-	pthread_cond_init (&condition2, NULL);
-	pthread_cond_init (&condition3, NULL);
-	pthread_cond_init (&condition4, NULL);
-	pthread_cond_init (&condition5, NULL);
 
 	struct bme280 *T_BME280 = malloc(sizeof(struct bme280));
 	struct uart *T_UART = malloc(sizeof(struct uart));
 	struct temp_control *T_CONTROL = malloc(sizeof(struct temp_control)); 
-	struct read_temperatures *T_READ = malloc(sizeof(struct read_temperatures));
 
 	init_bme280_attr(T_BME280);
 	init_uart_attr(T_UART);
@@ -145,26 +133,36 @@ void main()
 	resetCoolerAndResistor();
 	setup_LCD();
 
-	signal(SIGINT, stopWhile);
-	signal(SIGALRM, sig_handler);
-	ualarm(5e5, 0);
+	menu(T_UART, T_CONTROL);
 
-	pthread_create(&(threads[0]), NULL, read_bme_thread, (void*)T_BME280);
-	pthread_create(&(threads[1]), NULL, read_uart_thread, (void*)T_UART);
-	pthread_create(&(threads[2]), NULL, write_on_CSV_thread, (void*)T_CONTROL);
-	pthread_create(&(threads[3]), NULL, keep_temperature_thread, (void*)T_CONTROL);
-	pthread_create(&(threads[4]), NULL, output_temperatures_thread, (void*)T_CONTROL);
+	signal(SIGALRM, sig_handler);
+	signal(SIGINT, stopWhile);
+    ualarm(5e5, 5e5);
+
+	pthread_mutex_init(&mutex1, NULL);
+	pthread_mutex_init(&mutex2, NULL);
+	pthread_mutex_init(&mutex3, NULL);
+	pthread_mutex_init(&mutex4, NULL);
+	pthread_mutex_init(&mutex5, NULL);
+	pthread_cond_init (&condition1, NULL);
+	pthread_cond_init (&condition2, NULL);
+	pthread_cond_init (&condition3, NULL);
+	pthread_cond_init (&condition4, NULL);
+	pthread_cond_init (&condition5, NULL);
+
+
+
+	pthread_t threads[5];
+	pthread_create(&threads[0], NULL, read_bme_thread, (void*)T_BME280);
+	pthread_create(&threads[1], NULL, read_uart_thread, (void*)T_UART);
+	pthread_create(&threads[2], NULL, write_on_CSV_thread, (void*)T_CONTROL);
+	pthread_create(&threads[3], NULL, keep_temperature_thread, (void*)T_CONTROL);
+	pthread_create(&threads[4], NULL, output_temperatures_thread, (void*)T_CONTROL);
 	
 	
-	while(!stop){
+	while(run){
 	}
 	resetCoolerAndResistor();
-
-    pthread_join(threads[0], NULL);
-    pthread_join(threads[1], NULL);
-    pthread_join(threads[2], NULL);
-    pthread_join(threads[3], NULL);
-    pthread_join(threads[4], NULL);
 
 	pthread_mutex_destroy(&mutex1);
 	pthread_mutex_destroy(&mutex2);
