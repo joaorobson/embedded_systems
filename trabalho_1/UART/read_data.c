@@ -3,24 +3,18 @@
 #include <fcntl.h>          //Used for UART
 #include <termios.h>        //Used for UART
 
-struct t{
-	float temp;
-	char device[15];
-	unsigned char command;
-};
-void* get_uart_temperature(void* args) {
-struct t *argss = (struct t*) args;
-    int uart0_filestream = -1;
-	float temperature = 0.0;
+void read_data(float* temperature, char *device, unsigned char command){
 
-    uart0_filestream = open("/dev/serial0", O_RDWR | O_NOCTTY | O_NDELAY | O_NONBLOCK);      //Open in non blocking read/write mode
+    int uart0_filestream = -1;
+
+    uart0_filestream = open(device, O_RDWR | O_NOCTTY | O_NDELAY | O_NONBLOCK);      //Open in non blocking read/write mode
     if (uart0_filestream == -1)
     {
         printf("Erro - Não foi possível iniciar a UART.\n");
     }
     else
     {
-        printf("UART inicializada!\n");
+        //printf("UART inicializada!\n");
     }    
     struct termios options;
     tcgetattr(uart0_filestream, &options);
@@ -35,17 +29,17 @@ struct t *argss = (struct t*) args;
     unsigned char *p_tx_buffer;
     
     p_tx_buffer = &tx_buffer[0];
-    *p_tx_buffer++ = argss->command;
+    *p_tx_buffer++ = command;
     *p_tx_buffer++ = 4;
     *p_tx_buffer++ = 0;
     *p_tx_buffer++ = 0;
     *p_tx_buffer++ = 3;
 
-    printf("Buffers de memória criados!\n");
+    //printf("Buffers de memória criados!\n");
     
     if (uart0_filestream != -1)
     {
-        printf("Escrevendo caracteres na UART ...");
+        //printf("Escrevendo caracteres na UART ...");
         int count = write(uart0_filestream, &tx_buffer[0], (p_tx_buffer - &tx_buffer[0]));
         if (count < 0)
         {
@@ -53,11 +47,11 @@ struct t *argss = (struct t*) args;
         }
         else
         {
-            printf("escrito.\n");
+            //printf("escrito.\n");
         }
     }
 
-    sleep(1);
+    usleep(200000);
 
     //----- CHECK FOR ANY RX BYTES -----
     if (uart0_filestream != -1)
@@ -78,11 +72,16 @@ struct t *argss = (struct t*) args;
         {
             //Bytes received
             rx_buffer[rx_length] = '\0';
-			argss->temp = (*(float*)rx_buffer);
-            printf("%i Bytes lidos : %f\n", rx_length, temperature);
+			*temperature = (*(float*)rx_buffer);
+            //printf("%i Bytes lidos : %f\n", rx_length, *temperature);
         }
     }
 
     close(uart0_filestream);
+
+
 }
 
+void get_uart_temperature(float* temperature, char* device, unsigned char command) {
+	read_data(temperature, device, command);
+}
