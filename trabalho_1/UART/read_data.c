@@ -51,7 +51,7 @@ void read_data(float* temperature, char *device, unsigned char command){
         }
     }
 
-    usleep(500000);
+    usleep(200000);
 
     //----- CHECK FOR ANY RX BYTES -----
     if (uart0_filestream != -1)

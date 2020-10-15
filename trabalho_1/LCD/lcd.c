@@ -46,7 +46,7 @@ void typeln(const char *s);
 void typeChar(char val);
 int fd;  // seen by all subroutines
 
-void setupLCD(){
+void setup_LCD(){
 
 	if (wiringPiSetup () == -1) exit (1);
 
@@ -55,15 +55,13 @@ void setupLCD(){
 	lcd_init(); // setup LCD
 }
 
-void writeOnLCD(const char* line1text, const char* line2text){
+void LCD(const char* line1text, const char* line2text){
 
 	lcdLoc(LINE1);
 	typeln(line1text);
 	lcdLoc(LINE2);
 	typeln(line2text);
-
 }
-
 
 // float to string
 void typeFloat(float myFloat)   {

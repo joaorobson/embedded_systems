@@ -5,6 +5,11 @@
 #include "UART/read_data.c"
 #include "BCM2835/control_temperature.c"
 
+struct read_temperatures {
+    float TI;
+    float TR;
+    float TE;
+};
 
 struct uart {
 	float TI;
@@ -18,8 +23,10 @@ struct temp_control {
     float hysteresis;
     int coolerIsOn;
     int resistorIsOn;
-    struct uart UART;
+    struct uart *UART;
+    struct bme280 *BME280;
 };
+
 struct bme280 {
 	float temperature;
 	char device[20];
@@ -58,8 +65,9 @@ char* get_datetime()
 }
 
 
-void write_on_CSV(float TI, float TE, float TR)
+void write_on_CSV(void* args)
 {
+	struct temp_control *temp_args = (struct temp_control*) args;
     FILE *fp;
     fp = fopen("sensors_data.csv", "a+");
 
@@ -71,17 +79,36 @@ void write_on_CSV(float TI, float TE, float TR)
         fprintf(fp,"Data/Hora, Temp Int, Temp Ext, Temp Ref");
     }
 
-    fprintf(fp, "\n%s, %.2lf, %.2lf, %.2lf", get_datetime(), TI, TE, TR);
+    fprintf(fp, "\n%s, %.2lf, %.2lf, %.2lf", get_datetime(), temp_args->UART->TI, temp_args->BME280->temperature, temp_args->UART->TR);
     fclose(fp);
 
 }
 
+void write_on_console(void* args){
+	struct temp_control *temp_args = (struct temp_control*) args;
+    system("clear");
+
+    printf("\n\nTI: %f, TE: %f, TR: %f\n", temp_args->UART->TI, temp_args->BME280->temperature, temp_args->UART->TR);
+}
+
+void write_on_LCD(void* args){
+	struct temp_control *temp_args = (struct temp_control*) args;
+    char* line1text = (char*)malloc(16*sizeof(char));
+    char* line2text = (char*)malloc(16*sizeof(char));
+    sprintf(line1text, "TI:%.2fTE:%.2f", temp_args->UART->TI, temp_args->BME280->temperature); 
+    sprintf(line2text, "TR: %.2f", temp_args->UART->TR); 
+		
+	LCD(line1text, line2text);
+}
+
+void output_temperatures(void *args){
+    //write_on_LCD(args);
+    write_on_console(args);
+}
+
 void init_bme280_attr(struct bme280 *BME280){
 	strcpy(BME280->device, "/dev/i2c-1");
-    //BME280->id = open_device(BME280->id, BME280->device);
-    //BME280->dev = malloc(sizeof(struct bme280_dev));
 	BME280->dev = set_bme280_configs(BME280->device);
-
 }
 
 void init_uart_attr(struct uart *T_UART){
@@ -92,24 +119,33 @@ void init_uart_attr(struct uart *T_UART){
 	
 }
 
-void menu(struct bme280 *TE,
-          struct uart *T_UART){
-    system("clear");
-    printf("\n\nTI: %f, TE: %f, TR: %f\n", T_UART->TI, TE->temperature, T_UART->TR);
-    printf("Selecione uma opção:\n1 - Definir temperatura de referência\n2 - Sair\n");
-}
 
 void resetCoolerAndResistor(){
 	controlTemperature("COOLER", "OFF");
 	controlTemperature("RESISTOR", "OFF");
-
 }
+
+//void menu(struct UART *T_UART){
+//    int option = 0;
+//    printf("Deseja inserir temperatura de referência?\n1 - S\n2 - N\n");
+//    scanf("%d", &option);
+//    if(option == 1){
+//        printf("Insira a TR:\n");
+//     
+//        
+//    }
+//    
+//    printf("Insira a temperatura de referência desejada\n");
+//    scanf("%, &T_UART->TR);
+//    printf("Insira a temperatura de referência desejada: %f\n", &T_UART->TR);
+//
+//}
+
 void keep_temperature(struct temp_control *TC)
 {
-	float upperLimit = TC->UART.TR + (TC->hysteresis/2.0);
-	float lowerLimit = TC->UART.TR - (TC->hysteresis/2.0);
-
-	if(TC->UART.TI > upperLimit){
+	float upperLimit = TC->UART->TR + (TC->hysteresis/2.0);
+	float lowerLimit = TC->UART->TR - (TC->hysteresis/2.0);
+	if(TC->UART->TI > upperLimit){
 		if(TC->coolerIsOn == 0){
 			controlTemperature("COOLER", "ON");
 			TC->coolerIsOn = 1;
@@ -119,7 +155,7 @@ void keep_temperature(struct temp_control *TC)
 			TC->resistorIsOn = 0;
 		}
 	}
-	else if(TC->UART.TI < lowerLimit){
+	else if(TC->UART->TI < lowerLimit){
 		if(TC->coolerIsOn == 1){
 			controlTemperature("COOLER", "OFF");
 			TC->coolerIsOn = 0;
