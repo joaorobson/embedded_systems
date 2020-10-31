@@ -38,15 +38,15 @@
 /******************************************************************************/
 /*!                               Structures                                  */
 
-/* Structure that contains identifier details used in example */
-struct identifier
-{
-    /* Variable to hold device address */
-    uint8_t dev_addr;
-
-    /* Variable that contains file descriptor */
-    int8_t fd;
-};
+///* Structure that contains identifier details used in example */
+//struct identifier
+//{
+//    /* Variable to hold device address */
+//    uint8_t dev_addr;
+//
+//    /* Variable that contains file descriptor */
+//    int8_t fd;
+//};
 
 /****************************************************************************/
 /*!                         Functions                                       */
@@ -319,7 +319,7 @@ int8_t get_sensor_data_forced_mode(struct bme280_dev *dev, float *temp, float *h
     uint8_t settings_sel = 0;
 
     /* Variable to store minimum wait time between consecutive measurement in force mode */
-    uint32_t req_delay;
+    //uint32_t req_delay;
 
     /* Structure to get the pressure, temperature and humidity values */
     struct bme280_data comp_data;

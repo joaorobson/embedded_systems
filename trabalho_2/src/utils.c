@@ -1,38 +1,39 @@
 #include <time.h>
 #include <pthread.h>
-#include "bme280.c"
-#include "read_data.c"
+#include <stdio.h>
+#include <string.h>
+#include "utils.h"
 
-struct read_temperatures {
-    float TI;
-    float TR;
-    float TE;
-};
-
-struct uart {
-	float TI;
-	float TR;
-	unsigned char get_TI_command;
-	unsigned char get_TR_command;
-	char device[20];
-    int read_TR;
-};
-
-struct temp_control {
-    float hysteresis;
-    int coolerIsOn;
-    int resistorIsOn;
-    struct uart *UART;
-    struct bme280 *BME280;
-};
-
-struct bme280 {
-	float temperature;
-	float humidity;
-	char device[20];
-    struct bme280_dev dev;
-    struct identifier id;
-};
+//struct read_temperatures {
+//    float TI;
+//    float TR;
+//    float TE;
+//};
+//
+//struct uart {
+//	float TI;
+//	float TR;
+//	unsigned char get_TI_command;
+//	unsigned char get_TR_command;
+//	char device[20];
+//    int read_TR;
+//};
+//
+//struct temp_control {
+//    float hysteresis;
+//    int coolerIsOn;
+//    int resistorIsOn;
+//    struct uart *UART;
+//    struct bme280 *BME280;
+//};
+//
+//struct bme280 {
+//	float temperature;
+//	float humidity;
+//	char device[20];
+//    struct bme280_dev dev;
+//    struct identifier id;
+//};
 
 void* get_external_temperature(void* args){
 	struct bme280 *temp_args = (struct bme280*) args;

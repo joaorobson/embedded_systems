@@ -53,6 +53,7 @@
 /*! @name       Common macros               */
 /********************************************************/
 
+
 #if !defined(UINT8_C) && !defined(INT8_C)
 #define INT8_C(x)    S8_C(x)
 #define UINT8_C(x)   U8_C(x)
@@ -430,6 +431,15 @@ struct bme280_settings
     /*< standby time */
     uint8_t standby_time;
 };
+/* Structure that contains identifier details used in example */
+ struct identifier
+ {
+     /* Variable to hold device address */
+     uint8_t dev_addr;
+ 
+     /* Variable that contains file descriptor */
+     int8_t fd;
+ };
 
 /*!
  * @brief bme280 device structure

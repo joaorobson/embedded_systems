@@ -63,6 +63,8 @@ extern "C" {
  * @brief Initialize the sensor and device structure
  */
 
+struct bme280_dev set_bme280_configs(char* device);
+void get_bme280_temperature(float* temperature, float *humidity, char* device, struct identifier id, struct bme280_dev dev);
 /*!
  * \ingroup bme280ApiInit
  * \page bme280_api_bme280_init bme280_init

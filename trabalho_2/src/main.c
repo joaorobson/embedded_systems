@@ -1,8 +1,10 @@
 #include <pthread.h>
 #include <signal.h>
 #include <stdbool.h>
+#include <stdlib.h>
 #include <unistd.h>
-#include "utils.c"
+#include <stdio.h>
+#include "utils.h"
 
 pthread_mutex_t bme280_mutex;
 pthread_cond_t bme280_cond;
