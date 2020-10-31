@@ -39,6 +39,11 @@ struct bme280 {
     struct identifier id;
 };
 
+struct distr_server {
+    struct bme280 *BME280;
+    int socket_n;
+};
+
 void* get_external_temperature(void* args);
 
 //void* get_uart_temperatures(void* args){
