@@ -12,7 +12,7 @@
 
 #define FLT_EXPO_SIZE 5
 #define MAX 80 
-#define PORT 10110
+#define PORT 10010
 #define SA struct sockaddr 
 
 
@@ -31,9 +31,11 @@ void* get_ex_temperature(void* _args){
 	get_external_temperature((void*)server->BME280);
 
 	char *message = (char*) malloc(200*sizeof(char));///"Hello from client"; 
-	char str_temp[20];
-	gcvt(server->BME280->temperature, 7,  str_temp);
-	sprintf(message, "{Temp: %s", str_temp);
+	char temp_buf[20];
+	char hum_buf[20];
+	gcvt(server->BME280->temperature, 7,  temp_buf);
+	gcvt(server->BME280->humidity, 7,  hum_buf);
+	sprintf(message, "{\"Temp\": %s, \"Hum\": %s}", temp_buf, hum_buf);
 
 	char buffer[1024] = {0}; 
 	send(server->socket_n, message, strlen(message), 0 ); 
