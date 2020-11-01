@@ -28,12 +28,15 @@ void stopWhile(int signum){
 
 void* get_ex_temperature(void* _args){
 	struct distr_server *server = (struct distr_server*) _args;
-	srand(time(NULL));
-	int randn = 1+rand()%10;
-	char *hello = (char*) malloc(200*sizeof(char));///"Hello from client"; 
-	sprintf(hello, "{Temp: %s", "42.0");
+	get_external_temperature((void*)server->BME280);
+
+	char *message = (char*) malloc(200*sizeof(char));///"Hello from client"; 
+	char str_temp[20];
+	gcvt(server->BME280->temperature, 7,  str_temp);
+	sprintf(message, "{Temp: %s", str_temp);
+
 	char buffer[1024] = {0}; 
-	send(server->socket_n, hello , strlen(hello) , 0 ); 
+	send(server->socket_n, message, strlen(message), 0 ); 
     int valread = read(server->socket_n, buffer, 1024); 
     printf("%s\n",buffer );
 	return NULL;
@@ -41,7 +44,7 @@ void* get_ex_temperature(void* _args){
 
 void* read_bme_thread(void* args){
 	pthread_mutex_lock(&bme280_mutex);
-  while(!read_bme280){
+	while(!read_bme280){
 		pthread_cond_wait(&bme280_cond, &bme280_mutex);
 		get_ex_temperature(args);
 		read_bme280 = 0;
@@ -53,14 +56,11 @@ void* read_bme_thread(void* args){
 void sig_handler(int signum) {
     if(signum == SIGALRM){
         pthread_mutex_lock(&bme280_mutex);
-				printf("read %d\n", read_bme280);
         if(read_bme280 == 0){ 
             read_bme280 = 1;
-								printf("Oi\n");
             pthread_cond_signal(&bme280_cond);
         }   
         pthread_mutex_unlock(&bme280_mutex);
-				printf("alarm\n");
         alarm(3);
     }
     if(signum == SIGINT){
@@ -112,7 +112,7 @@ int main(int argc, char ** argv)
 	struct distr_server *server = malloc(sizeof(struct distr_server));
 	config_server(server);
 	server->BME280 = BME280;
-
+	init_bme280_attr(BME280);	
 
 	signal(SIGALRM, sig_handler);
 	signal(SIGINT, stopWhile);
