@@ -49,7 +49,7 @@ void* sending_thread(void* _args){
 		pthread_cond_wait(&send_cond, &send_mutex);
 		struct distr_server *server = (struct distr_server*) _args;
 
-		char *message = (char*) malloc(200*sizeof(char));
+		char *message = (char*) malloc(300*sizeof(char));
 		message = data_to_JSON(server);
 
 		char buffer[1024] = {0}; 

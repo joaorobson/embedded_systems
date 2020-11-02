@@ -36,11 +36,24 @@ def show():
                 exit(0) 
             json_data = json.loads(data)
             stdscr.clear()
-            stdscr.addstr(0,0,"Temperatura: " + str(json_data.get("Temp", "")))
-            stdscr.addstr(1,0,"Umidade: " + str(json_data.get("Hum", "")))
+            stdscr.addstr(0,0,"Temperatura: " + str(json_data.get("Temp", "")) + "ºC")
+            stdscr.addstr(1,0,"Umidade: " + str(json_data.get("Hum", "")) + "%")
             stdscr.addstr(2,0,"Lâmp. 1: " + str(json_data.get("Lamp1", "")))
-            stdscr.addstr(3,0,"buf: {}".format(buf))
-            stdscr.addstr(4,0,"n: {}".format(n))
+            stdscr.addstr(3,0,"Lâmp. 2: " + str(json_data.get("Lamp2", "")))
+            stdscr.addstr(4,0,"Lâmp. 3: " + str(json_data.get("Lamp3", "")))
+            stdscr.addstr(5,0,"Lâmp. 4: " + str(json_data.get("Lamp4", "")))
+            stdscr.addstr(6,0,"Ar Cond. 1: " + str(json_data.get("Lamp4", "")))
+            stdscr.addstr(7,0,"Ar Cond. 2: " + str(json_data.get("Lamp4", "")))
+            stdscr.addstr(8,0,"Sens. Pres. 1: " + str(json_data.get("PresSens1", "")))
+            stdscr.addstr(9,0,"Sens. Pres. 2: " + str(json_data.get("PresSens2", "")))
+            stdscr.addstr(9,0,"Sens. Abert. 1: " + str(json_data.get("OpenSens1", "")))
+            stdscr.addstr(9,0,"Sens. Abert. 2: " + str(json_data.get("OpenSens2", "")))
+            stdscr.addstr(9,0,"Sens. Abert. 3: " + str(json_data.get("OpenSens3", "")))
+            stdscr.addstr(9,0,"Sens. Abert. 4: " + str(json_data.get("OpenSens4", "")))
+            stdscr.addstr(9,0,"Sens. Abert. 5: " + str(json_data.get("OpenSens5", "")))
+            stdscr.addstr(9,0,"Sens. Abert. 6: " + str(json_data.get("OpenSens6", "")))
+            stdscr.addstr(10,0,"buf: {}".format(buf))
+            stdscr.addstr(11,0,"n: {}".format(n))
             stdscr.refresh()
 
             line += 1
@@ -52,7 +65,7 @@ def show():
                 else:
                     buf += chr(c)
                           
-    except KeyboardInterrupt:
+    except:
         curses.endwin()
         exit(0)
 

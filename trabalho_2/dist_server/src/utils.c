@@ -5,16 +5,31 @@
 #include "utils.h"
 
 char* data_to_JSON(struct distr_server* server){
-    char *message = (char*) malloc(200*sizeof(char));
+    char *message = (char*) malloc(300*sizeof(char));
     sprintf(message, "{\"Temp\": %.5f, \"Hum\": %.5f, "
                      "\"Lamp1\": %u, \"Lamp2\": %u, "
-                     "\"Lamp3\": %u, \"Lamp4\": %u}", 
+                     "\"Lamp3\": %u, \"Lamp4\": %u, "
+                     "\"AirC1\": %u, \"AirC2\": %u, "
+                     "\"PresSens1\": %u, \"PresSens2\": %u, "
+                     "\"OpenSens1\": %u, \"OpenSens2\": %u, "
+                     "\"OpenSens3\": %u, \"OpenSens4\": %u, "
+                     "\"OpenSens5\": %u, \"OpenSens6\": %u}",
                      server->BME280->temperature, 
                      server->BME280->humidity, 
                      server->GPIO->lamp1,
                      server->GPIO->lamp2,
                      server->GPIO->lamp3,
-                     server->GPIO->lamp4);
+                     server->GPIO->lamp4,
+                     server->GPIO->air_c1,
+                     server->GPIO->air_c2,
+                     server->GPIO->pres_sens1,
+                     server->GPIO->pres_sens2,
+                     server->GPIO->open_sens1,
+                     server->GPIO->open_sens2,
+                     server->GPIO->open_sens3,
+                     server->GPIO->open_sens4,
+                     server->GPIO->open_sens5,
+                     server->GPIO->open_sens6);
 
     return message;
 }
