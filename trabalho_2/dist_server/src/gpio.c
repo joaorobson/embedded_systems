@@ -52,13 +52,19 @@ int switch_lamp_state(int lamp_number, uint8_t state){
 	}
 }
 
-void get_devices_state(struct gpio* GPIO){
+void get_sensors_states(struct gpio* GPIO){
     if (!bcm2835_init()){
         return 1;
 	}
 
 	bcm2835_gpio_fsel(LAMP1_PIN, BCM2835_GPIO_FSEL_INPT);
+	bcm2835_gpio_fsel(LAMP2_PIN, BCM2835_GPIO_FSEL_INPT);
+	bcm2835_gpio_fsel(LAMP3_PIN, BCM2835_GPIO_FSEL_INPT);
+	bcm2835_gpio_fsel(LAMP4_PIN, BCM2835_GPIO_FSEL_INPT);
 	GPIO->lamp1 = bcm2835_gpio_lev(LAMP1_PIN);
+	GPIO->lamp2 = bcm2835_gpio_lev(LAMP2_PIN);
+	GPIO->lamp3 = bcm2835_gpio_lev(LAMP3_PIN);
+	GPIO->lamp4 = bcm2835_gpio_lev(LAMP4_PIN);
 
 	bcm2835_close();
 }

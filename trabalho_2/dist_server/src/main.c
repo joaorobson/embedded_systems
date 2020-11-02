@@ -17,17 +17,31 @@
 #define SA struct sockaddr 
 
 
-pthread_mutex_t bme280_mutex, send_mutex;
-pthread_cond_t bme280_cond, send_cond;
+pthread_mutex_t bme280_mutex, sensors_mutex, send_mutex;
+pthread_cond_t bme280_cond, sensors_cond, send_cond;
 
 volatile sig_atomic_t run = 1; 
 volatile sig_atomic_t read_bme280 = 0,
+					  read_sensors = 0,
 					  run_sending = 0; 
+
 
 void stopWhile(int signum){
     run = 0;
 }
 
+void* get_sensors_states_thread(void* _args){
+	pthread_mutex_lock(&sensors_mutex);
+	while(!read_sensors){
+		pthread_cond_wait(&sensors_cond, &sensors_mutex);
+		struct distr_server *server = (struct distr_server*) _args;
+		get_sensors_states(server->GPIO);
+
+		read_sensors = 0;
+	}
+	pthread_mutex_unlock(&sensors_mutex);
+	pthread_exit( NULL );
+}
 
 void* sending_thread(void* _args){
 	pthread_mutex_lock(&send_mutex);
@@ -45,12 +59,14 @@ void* sending_thread(void* _args){
 		char buffer[1024] = {0}; 
 		send(server->socket_n, message, strlen(message), 0 ); 
 		int valread = read(server->socket_n, buffer, 1024); 
+		if(valread == 0){
+			exit(0);
+		}
 		printf("%s\n",buffer );
 		run_sending = 0;
 	}
 	pthread_mutex_unlock(&send_mutex);
 	pthread_exit( NULL );
-
 }
 
 void* get_temp_and_hum_thread(void* _args){
@@ -69,12 +85,14 @@ void* get_temp_and_hum_thread(void* _args){
 
 void sig_handler(int signum) {
     if(signum == SIGALRM){
-        pthread_mutex_lock(&bme280_mutex);
+        //pthread_mutex_lock(&bme280_mutex);
+        pthread_mutex_lock(&send_mutex);
         if(read_bme280 == 0){ 
             read_bme280 = 1;
             pthread_cond_signal(&bme280_cond);
         }
-        pthread_mutex_unlock(&bme280_mutex);
+        //pthread_mutex_unlock(&bme280_mutex);
+        pthread_mutex_unlock(&send_mutex);
 
         pthread_mutex_lock(&send_mutex);
         if(run_sending == 0){ 
@@ -83,6 +101,14 @@ void sig_handler(int signum) {
         }
         pthread_mutex_unlock(&send_mutex);
 
+        //pthread_mutex_lock(&sensors_mutex);
+        pthread_mutex_lock(&send_mutex);
+        if(read_sensors == 0){ 
+            read_sensors = 1;
+            pthread_cond_signal(&sensors_cond);
+        }
+        pthread_mutex_unlock(&send_mutex);
+        //pthread_mutex_unlock(&sensors_mutex);
         alarm(1);
     }
     if(signum == SIGINT){
@@ -99,7 +125,7 @@ char* struct_to_JSON(struct bme280 *BME280){
 }
 
   
-void config_server(struct distr_server *server) 
+int config_server(struct distr_server *server) 
 { 
 	int sock = 0; 
 	struct sockaddr_in serv_addr; 
@@ -112,7 +138,6 @@ void config_server(struct distr_server *server)
 	serv_addr.sin_family = AF_INET; 
 	serv_addr.sin_port = htons(PORT); 
 	
-	// Convert IPv4 and IPv6 addresses from text to binary form 
 	if(inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr)<=0) 
 	{ 
 		printf("\nInvalid address/ Address not supported \n"); 
@@ -125,6 +150,7 @@ void config_server(struct distr_server *server)
 		return -1; 
 	} 
 	server->socket_n = sock;
+	return 0;
 } 
 
 
@@ -134,7 +160,11 @@ int main(int argc, char ** argv)
 	struct distr_server *server = malloc(sizeof(struct distr_server));
 	struct gpio *GPIO = malloc(sizeof(struct gpio));
 
-	config_server(server);
+	int server_state = config_server(server);
+	if(server_state == -1){
+		exit(1);
+	}
+
 	server->BME280 = BME280;
 	server->GPIO = GPIO;
 	init_bme280_attr(BME280);	
@@ -144,13 +174,29 @@ int main(int argc, char ** argv)
 	alarm(1);
 
 	pthread_mutex_init(&bme280_mutex, NULL);
+	pthread_mutex_init(&send_mutex, NULL);
+	pthread_mutex_init(&sensors_mutex, NULL);
+
 	pthread_cond_init (&bme280_cond, NULL);
-	pthread_t threads[2];
-	pthread_create(&threads[0], NULL, get_temp_and_hum_thread, (void*)server);
-	pthread_create(&threads[1], NULL, sending_thread, (void*)server);
-	//pthread_create(&threads[1], NULL, client, (void*)BME280);
-    // close the socket 
-		while(run){}
+	pthread_cond_init (&send_cond, NULL);
+	pthread_cond_init (&sensors_cond, NULL);
+
+	pthread_t threads[3];
+	pthread_create(&threads[0], NULL, sending_thread, (void*)server);
+	pthread_create(&threads[1], NULL, get_temp_and_hum_thread, (void*)server);
+	pthread_create(&threads[2], NULL, get_sensors_states_thread, (void*)server);
+
+	while(run){}
+
+	
+	pthread_mutex_destroy(&bme280_mutex);
+	pthread_mutex_destroy(&send_mutex);
+	pthread_mutex_destroy(&sensors_mutex);
+
+	pthread_cond_destroy(&bme280_cond); 
+	pthread_cond_destroy(&send_cond); 
+	pthread_cond_destroy(&sensors_cond); 
+
     close(server->socket_n); 
     return 0;
 }

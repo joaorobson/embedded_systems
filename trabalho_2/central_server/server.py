@@ -12,7 +12,7 @@ stdscr = curses.initscr()
 stdscr.nodelay(1) # set getch() non-blocking
 stdscr.timeout(100)
 curses.noecho()
-data = ""
+data = " "
 HOST = '127.0.0.1'  # Standard loopback interface address (localhost)
 PORT = 10010 # Port to listen on (non-privileged ports are > 1023)
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -30,6 +30,9 @@ def show():
     global data
     try:
         while True:
+            if not data:
+                curses.endwin()
+                exit(0) 
             stdscr.clear()
             stdscr.addstr(0,0,str(data))
             stdscr.addstr(1,0,"buf: {}".format(buf))
@@ -53,6 +56,8 @@ def receive():
     conn, addr = s.accept()
     while True:
         data = conn.recv(1024)
+        if not data:
+            exit(0) 
         conn.sendall(data)
 
 if __name__ == "__main__":

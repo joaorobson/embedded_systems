@@ -40,7 +40,7 @@ struct gpio {
  
 int switch_lamp_state(int lamp_number, uint8_t state);
 
-void get_devices_state(struct gpio* GPIO);
+void get_sensors_states(struct gpio* GPIO);
 
 
 //int main(int argc, char **argv)
