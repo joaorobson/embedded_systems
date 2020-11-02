@@ -52,9 +52,9 @@ void* sending_thread(void* _args){
 		char *message = (char*) malloc(200*sizeof(char));
 		char temp_buf[20];
 		char hum_buf[20];
-		gcvt(server->BME280->temperature, 7,  temp_buf);
-		gcvt(server->BME280->humidity, 7,  hum_buf);
-		sprintf(message, "{\"Temp\": %s, \"Hum\": %s, lamp1: %u}", temp_buf, hum_buf, server->GPIO->lamp1);
+		gcvt(server->BME280->temperature, 5,  temp_buf);
+		gcvt(server->BME280->humidity, 5,  hum_buf);
+		sprintf(message, "{\"Temp\": %s, \"Hum\": %s, \"Lamp1\": %u}", temp_buf, hum_buf, server->GPIO->lamp1);
 
 		char buffer[1024] = {0}; 
 		send(server->socket_n, message, strlen(message), 0 ); 

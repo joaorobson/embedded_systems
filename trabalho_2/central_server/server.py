@@ -6,13 +6,14 @@ import threading
 import sys
 import signal
 import os
+import json
 
 global stdscr
 stdscr = curses.initscr()
 stdscr.nodelay(1) # set getch() non-blocking
 stdscr.timeout(100)
 curses.noecho()
-data = " "
+data = "{}"
 HOST = '127.0.0.1'  # Standard loopback interface address (localhost)
 PORT = 10010 # Port to listen on (non-privileged ports are > 1023)
 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
@@ -33,10 +34,13 @@ def show():
             if not data:
                 curses.endwin()
                 exit(0) 
+            json_data = json.loads(data)
             stdscr.clear()
-            stdscr.addstr(0,0,str(data))
-            stdscr.addstr(1,0,"buf: {}".format(buf))
-            stdscr.addstr(2,0,"n: {}".format(n))
+            stdscr.addstr(0,0,str(json_data.get("Temp", "")))
+            stdscr.addstr(1,0,str(json_data.get("Hum", "")))
+            stdscr.addstr(2,0,str(json_data.get("Lamp1", "")))
+            stdscr.addstr(3,0,"buf: {}".format(buf))
+            stdscr.addstr(4,0,"n: {}".format(n))
             stdscr.refresh()
 
             line += 1
@@ -50,6 +54,7 @@ def show():
                           
     except KeyboardInterrupt:
         curses.endwin()
+
 def receive():
     global data
     s.listen()
