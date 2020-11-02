@@ -4,37 +4,20 @@
 #include <string.h>
 #include "utils.h"
 
-//struct read_temperatures {
-//    float TI;
-//    float TR;
-//    float TE;
-//};
-//
-//struct uart {
-//	float TI;
-//	float TR;
-//	unsigned char get_TI_command;
-//	unsigned char get_TR_command;
-//	char device[20];
-//    int read_TR;
-//};
-//
-//struct temp_control {
-//    float hysteresis;
-//    int coolerIsOn;
-//    int resistorIsOn;
-//    struct uart *UART;
-//    struct bme280 *BME280;
-//};
-//
-//struct bme280 {
-//	float temperature;
-//	float humidity;
-//	char device[20];
-//    struct bme280_dev dev;
-//    struct identifier id;
-//};
+char* data_to_JSON(struct distr_server* server){
+    char *message = (char*) malloc(200*sizeof(char));
+    sprintf(message, "{\"Temp\": %.5f, \"Hum\": %.5f, "
+                     "\"Lamp1\": %u, \"Lamp2\": %u, "
+                     "\"Lamp3\": %u, \"Lamp4\": %u}", 
+                     server->BME280->temperature, 
+                     server->BME280->humidity, 
+                     server->GPIO->lamp1,
+                     server->GPIO->lamp2,
+                     server->GPIO->lamp3,
+                     server->GPIO->lamp4);
 
+    return message;
+}
 void* get_temperature_and_humidity(void* args){
 	struct bme280 *temp_args = (struct bme280*) args;
     read_bme280_data(&temp_args->temperature,

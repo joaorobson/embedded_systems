@@ -32,7 +32,7 @@ void stopWhile(int signum){
 
 void* get_sensors_states_thread(void* _args){
 	pthread_mutex_lock(&sensors_mutex);
-	while(!read_sensors){
+	while(!read_sensors && run){
 		pthread_cond_wait(&sensors_cond, &sensors_mutex);
 		struct distr_server *server = (struct distr_server*) _args;
 		get_sensors_states(server->GPIO);
@@ -45,16 +45,12 @@ void* get_sensors_states_thread(void* _args){
 
 void* sending_thread(void* _args){
 	pthread_mutex_lock(&send_mutex);
-	while(!run_sending){
+	while(!run_sending && run){
 		pthread_cond_wait(&send_cond, &send_mutex);
 		struct distr_server *server = (struct distr_server*) _args;
 
 		char *message = (char*) malloc(200*sizeof(char));
-		char temp_buf[20];
-		char hum_buf[20];
-		gcvt(server->BME280->temperature, 5,  temp_buf);
-		gcvt(server->BME280->humidity, 5,  hum_buf);
-		sprintf(message, "{\"Temp\": %s, \"Hum\": %s, \"Lamp1\": %u}", temp_buf, hum_buf, server->GPIO->lamp1);
+		message = data_to_JSON(server);
 
 		char buffer[1024] = {0}; 
 		send(server->socket_n, message, strlen(message), 0 ); 
@@ -71,7 +67,7 @@ void* sending_thread(void* _args){
 
 void* get_temp_and_hum_thread(void* _args){
 	pthread_mutex_lock(&bme280_mutex);
-	while(!read_bme280){
+	while(!read_bme280 && run){
 		pthread_cond_wait(&bme280_cond, &bme280_mutex);
 
 		struct distr_server *server = (struct distr_server*) _args;
@@ -85,14 +81,14 @@ void* get_temp_and_hum_thread(void* _args){
 
 void sig_handler(int signum) {
     if(signum == SIGALRM){
-        //pthread_mutex_lock(&bme280_mutex);
-        pthread_mutex_lock(&send_mutex);
+        pthread_mutex_lock(&bme280_mutex);
+        //pthread_mutex_lock(&send_mutex);
         if(read_bme280 == 0){ 
             read_bme280 = 1;
             pthread_cond_signal(&bme280_cond);
         }
-        //pthread_mutex_unlock(&bme280_mutex);
-        pthread_mutex_unlock(&send_mutex);
+        pthread_mutex_unlock(&bme280_mutex);
+        //pthread_mutex_unlock(&send_mutex);
 
         pthread_mutex_lock(&send_mutex);
         if(run_sending == 0){ 
@@ -101,19 +97,18 @@ void sig_handler(int signum) {
         }
         pthread_mutex_unlock(&send_mutex);
 
-        //pthread_mutex_lock(&sensors_mutex);
-        pthread_mutex_lock(&send_mutex);
+        pthread_mutex_lock(&sensors_mutex);
+        //pthread_mutex_lock(&send_mutex);
         if(read_sensors == 0){ 
             read_sensors = 1;
             pthread_cond_signal(&sensors_cond);
         }
-        pthread_mutex_unlock(&send_mutex);
-        //pthread_mutex_unlock(&sensors_mutex);
+        //pthread_mutex_unlock(&send_mutex);
+        pthread_mutex_unlock(&sensors_mutex);
         alarm(1);
     }
     if(signum == SIGINT){
-			run = 0;
-			exit(0);
+		run = 0;
     }
 }
 
@@ -168,9 +163,10 @@ int main(int argc, char ** argv)
 	server->BME280 = BME280;
 	server->GPIO = GPIO;
 	init_bme280_attr(BME280);	
+	set_sensors_mode();
 
 	signal(SIGALRM, sig_handler);
-	signal(SIGINT, stopWhile);
+	signal(SIGINT, sig_handler);
 	alarm(1);
 
 	pthread_mutex_init(&bme280_mutex, NULL);
@@ -188,7 +184,6 @@ int main(int argc, char ** argv)
 
 	while(run){}
 
-	
 	pthread_mutex_destroy(&bme280_mutex);
 	pthread_mutex_destroy(&send_mutex);
 	pthread_mutex_destroy(&sensors_mutex);
@@ -198,6 +193,9 @@ int main(int argc, char ** argv)
 	pthread_cond_destroy(&sensors_cond); 
 
     close(server->socket_n); 
+	bcm2835_close();
+	
+
     return 0;
 }
 

@@ -43,6 +43,7 @@ struct distr_server {
     int socket_n;
 };
 
+char* data_to_JSON(struct distr_server* server);
 void* get_temperature_and_humidity(void* args);
 
 //void* get_uart_temperatures(void* args){

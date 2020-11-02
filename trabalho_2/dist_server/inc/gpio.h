@@ -5,20 +5,20 @@
 #include <stdio.h>
 #include <time.h> 
 // Input on RPi pin GPIO 15
-#define LAMP1_PIN RPI_GPIO_P1_11
-#define LAMP2_PIN RPI_GPIO_P1_12
-#define LAMP3_PIN RPI_GPIO_P1_13
-#define LAMP4_PIN RPI_GPIO_P1_15
-#define AIR_C1_PIN RPI_GPIO_P1_16
-#define AIR_C2_PIN RPI_GPIO_P1_18
-#define PRES_SENS1_PIN RPI_GPIO_P1_22
-#define PRES_SENS2_PIN RPI_GPIO_P1_37
-#define OPEN_SENS1_PIN RPI_GPIO_P1_29
-#define OPEN_SENS2_PIN RPI_GPIO_P1_31
-#define OPEN_SENS3_PIN RPI_GPIO_P1_32
-#define OPEN_SENS4_PIN RPI_GPIO_P1_36
-#define OPEN_SENS5_PIN RPI_GPIO_P1_38
-#define OPEN_SENS6_PIN RPI_GPIO_P1_40
+#define LAMP1_PIN RPI_V2_GPIO_P1_11
+#define LAMP2_PIN RPI_V2_GPIO_P1_12
+#define LAMP3_PIN RPI_V2_GPIO_P1_13
+#define LAMP4_PIN RPI_V2_GPIO_P1_15
+#define AIR_C1_PIN RPI_V2_GPIO_P1_16
+#define AIR_C2_PIN RPI_V2_GPIO_P1_18
+#define PRES_SENS1_PIN RPI_V2_GPIO_P1_22
+#define PRES_SENS2_PIN RPI_V2_GPIO_P1_37
+#define OPEN_SENS1_PIN RPI_V2_GPIO_P1_29
+#define OPEN_SENS2_PIN RPI_V2_GPIO_P1_31
+#define OPEN_SENS3_PIN RPI_V2_GPIO_P1_32
+#define OPEN_SENS4_PIN RPI_V2_GPIO_P1_36
+#define OPEN_SENS5_PIN RPI_V2_GPIO_P1_38
+#define OPEN_SENS6_PIN RPI_V2_GPIO_P1_40
 
 struct gpio {
 	uint8_t lamp1;
@@ -39,6 +39,8 @@ struct gpio {
 };
  
 int switch_lamp_state(int lamp_number, uint8_t state);
+
+void set_sensors_mode();
 
 void get_sensors_states(struct gpio* GPIO);
 

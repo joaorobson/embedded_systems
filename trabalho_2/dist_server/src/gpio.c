@@ -52,7 +52,7 @@ int switch_lamp_state(int lamp_number, uint8_t state){
 	}
 }
 
-void get_sensors_states(struct gpio* GPIO){
+void set_sensors_mode(){
     if (!bcm2835_init()){
         return 1;
 	}
@@ -61,12 +61,32 @@ void get_sensors_states(struct gpio* GPIO){
 	bcm2835_gpio_fsel(LAMP2_PIN, BCM2835_GPIO_FSEL_INPT);
 	bcm2835_gpio_fsel(LAMP3_PIN, BCM2835_GPIO_FSEL_INPT);
 	bcm2835_gpio_fsel(LAMP4_PIN, BCM2835_GPIO_FSEL_INPT);
+	bcm2835_gpio_fsel(AIR_C1_PIN, BCM2835_GPIO_FSEL_INPT);
+	bcm2835_gpio_fsel(AIR_C2_PIN, BCM2835_GPIO_FSEL_INPT);
+	bcm2835_gpio_fsel(PRES_SENS1_PIN, BCM2835_GPIO_FSEL_INPT);
+	bcm2835_gpio_fsel(PRES_SENS2_PIN, BCM2835_GPIO_FSEL_INPT);
+	bcm2835_gpio_fsel(OPEN_SENS3_PIN, BCM2835_GPIO_FSEL_INPT);
+	bcm2835_gpio_fsel(OPEN_SENS4_PIN, BCM2835_GPIO_FSEL_INPT);
+	bcm2835_gpio_fsel(OPEN_SENS5_PIN, BCM2835_GPIO_FSEL_INPT);
+	bcm2835_gpio_fsel(OPEN_SENS6_PIN, BCM2835_GPIO_FSEL_INPT);
+}
+
+void get_sensors_states(struct gpio* GPIO){
+
 	GPIO->lamp1 = bcm2835_gpio_lev(LAMP1_PIN);
 	GPIO->lamp2 = bcm2835_gpio_lev(LAMP2_PIN);
 	GPIO->lamp3 = bcm2835_gpio_lev(LAMP3_PIN);
 	GPIO->lamp4 = bcm2835_gpio_lev(LAMP4_PIN);
-
-	bcm2835_close();
+	GPIO->air_c1 = bcm2835_gpio_lev(AIR_C1_PIN);
+	GPIO->air_c2 = bcm2835_gpio_lev(AIR_C2_PIN);
+	GPIO->pres_sens1 = bcm2835_gpio_lev(PRES_SENS1_PIN);
+	GPIO->pres_sens2 = bcm2835_gpio_lev(PRES_SENS2_PIN);
+	GPIO->open_sens1 = bcm2835_gpio_lev(OPEN_SENS1_PIN);
+	GPIO->open_sens2 = bcm2835_gpio_lev(OPEN_SENS2_PIN);
+	GPIO->open_sens3 = bcm2835_gpio_lev(OPEN_SENS3_PIN);
+	GPIO->open_sens4 = bcm2835_gpio_lev(OPEN_SENS4_PIN);
+	GPIO->open_sens5 = bcm2835_gpio_lev(OPEN_SENS5_PIN);
+	GPIO->open_sens6 = bcm2835_gpio_lev(OPEN_SENS6_PIN);
 }
 
 
