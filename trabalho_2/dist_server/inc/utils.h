@@ -43,7 +43,7 @@ struct distr_server {
     int socket_n;
 };
 
-void* get_external_temperature(void* args);
+void* get_temperature_and_humidity(void* args);
 
 //void* get_uart_temperatures(void* args){
 //	struct uart *temp_args = (struct uart*) args;

@@ -17,40 +17,50 @@
 #define SA struct sockaddr 
 
 
-pthread_mutex_t bme280_mutex;
-pthread_cond_t bme280_cond;
+pthread_mutex_t bme280_mutex, send_mutex;
+pthread_cond_t bme280_cond, send_cond;
 
 volatile sig_atomic_t run = 1; 
-volatile sig_atomic_t read_bme280  = 0; 
+volatile sig_atomic_t read_bme280 = 0,
+					  run_sending = 0; 
 
 void stopWhile(int signum){
     run = 0;
 }
 
-void* get_ex_temperature(void* _args){
-	struct distr_server *server = (struct distr_server*) _args;
-	get_external_temperature((void*)server->BME280);
-	get_devices_state(server->GPIO);
 
-	char *message = (char*) malloc(200*sizeof(char));///"Hello from client"; 
-	char temp_buf[20];
-	char hum_buf[20];
-	gcvt(server->BME280->temperature, 7,  temp_buf);
-	gcvt(server->BME280->humidity, 7,  hum_buf);
-	sprintf(message, "{\"Temp\": %s, \"Hum\": %s, lamp1: %u}", temp_buf, hum_buf, server->GPIO->lamp1);
+void* sending_thread(void* _args){
+	pthread_mutex_lock(&send_mutex);
+	while(!run_sending){
+		pthread_cond_wait(&send_cond, &send_mutex);
+		struct distr_server *server = (struct distr_server*) _args;
 
-	char buffer[1024] = {0}; 
-	send(server->socket_n, message, strlen(message), 0 ); 
-    int valread = read(server->socket_n, buffer, 1024); 
-    printf("%s\n",buffer );
-	return NULL;
+		char *message = (char*) malloc(200*sizeof(char));
+		char temp_buf[20];
+		char hum_buf[20];
+		gcvt(server->BME280->temperature, 7,  temp_buf);
+		gcvt(server->BME280->humidity, 7,  hum_buf);
+		sprintf(message, "{\"Temp\": %s, \"Hum\": %s, lamp1: %u}", temp_buf, hum_buf, server->GPIO->lamp1);
+
+		char buffer[1024] = {0}; 
+		send(server->socket_n, message, strlen(message), 0 ); 
+		int valread = read(server->socket_n, buffer, 1024); 
+		printf("%s\n",buffer );
+		run_sending = 0;
+	}
+	pthread_mutex_unlock(&send_mutex);
+	pthread_exit( NULL );
+
 }
 
-void* read_bme_thread(void* args){
+void* get_temp_and_hum_thread(void* _args){
 	pthread_mutex_lock(&bme280_mutex);
 	while(!read_bme280){
 		pthread_cond_wait(&bme280_cond, &bme280_mutex);
-		get_ex_temperature(args);
+
+		struct distr_server *server = (struct distr_server*) _args;
+		get_temperature_and_humidity((void*)server->BME280);
+
 		read_bme280 = 0;
 	}
 	pthread_mutex_unlock(&bme280_mutex);
@@ -63,9 +73,17 @@ void sig_handler(int signum) {
         if(read_bme280 == 0){ 
             read_bme280 = 1;
             pthread_cond_signal(&bme280_cond);
-        }   
+        }
         pthread_mutex_unlock(&bme280_mutex);
-        alarm(3);
+
+        pthread_mutex_lock(&send_mutex);
+        if(run_sending == 0){ 
+            run_sending = 1;
+            pthread_cond_signal(&send_cond);
+        }
+        pthread_mutex_unlock(&send_mutex);
+
+        alarm(1);
     }
     if(signum == SIGINT){
 			run = 0;
@@ -115,6 +133,7 @@ int main(int argc, char ** argv)
 	struct bme280 *BME280 = malloc(sizeof(struct bme280));
 	struct distr_server *server = malloc(sizeof(struct distr_server));
 	struct gpio *GPIO = malloc(sizeof(struct gpio));
+
 	config_server(server);
 	server->BME280 = BME280;
 	server->GPIO = GPIO;
@@ -127,7 +146,8 @@ int main(int argc, char ** argv)
 	pthread_mutex_init(&bme280_mutex, NULL);
 	pthread_cond_init (&bme280_cond, NULL);
 	pthread_t threads[2];
-	pthread_create(&threads[0], NULL, read_bme_thread, (void*)server);
+	pthread_create(&threads[0], NULL, get_temp_and_hum_thread, (void*)server);
+	pthread_create(&threads[1], NULL, sending_thread, (void*)server);
 	//pthread_create(&threads[1], NULL, client, (void*)BME280);
     // close the socket 
 		while(run){}

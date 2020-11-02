@@ -193,7 +193,7 @@ struct bme280_dev set_bme280_configs(char* device){
  * @brief This function starts execution of the program.
  */
 
-void get_bme280_temperature(float* temperature, float *humidity, char* device, struct identifier id, struct bme280_dev dev)
+void read_bme280_data(float* temperature, float *humidity, char* device, struct identifier id, struct bme280_dev dev)
 {
     /* Variable to define the result */
     int8_t rslt = BME280_OK;

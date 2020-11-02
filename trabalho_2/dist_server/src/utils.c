@@ -35,14 +35,13 @@
 //    struct identifier id;
 //};
 
-void* get_external_temperature(void* args){
+void* get_temperature_and_humidity(void* args){
 	struct bme280 *temp_args = (struct bme280*) args;
-    get_bme280_temperature(&temp_args->temperature,
-                           &temp_args->humidity,
-                           temp_args->device,
-                           temp_args->id,
-						   temp_args->dev);
-    printf("%f\n", temp_args->temperature);
+    read_bme280_data(&temp_args->temperature,
+                     &temp_args->humidity,
+                     temp_args->device,
+                     temp_args->id,
+					 temp_args->dev);
     return NULL;
 }
 
