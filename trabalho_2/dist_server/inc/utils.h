@@ -1,12 +1,10 @@
 #ifndef UTILS_H_
 #define UTILS_H_
 
-
 #include <time.h>
 #include <pthread.h>
-//#include "bme280.c"
 #include "bme280.h"
-
+#include "gpio.h"
 
 struct read_temperatures {
     float TI;
@@ -41,6 +39,7 @@ struct bme280 {
 
 struct distr_server {
     struct bme280 *BME280;
+    struct gpio *GPIO;
     int socket_n;
 };
 

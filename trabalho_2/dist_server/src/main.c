@@ -9,6 +9,7 @@
 #include <unistd.h>
 #include <float.h>
 #include "utils.h"
+//#include "gpio.h"
 
 #define FLT_EXPO_SIZE 5
 #define MAX 80 
@@ -29,13 +30,14 @@ void stopWhile(int signum){
 void* get_ex_temperature(void* _args){
 	struct distr_server *server = (struct distr_server*) _args;
 	get_external_temperature((void*)server->BME280);
+	get_devices_state(server->GPIO);
 
 	char *message = (char*) malloc(200*sizeof(char));///"Hello from client"; 
 	char temp_buf[20];
 	char hum_buf[20];
 	gcvt(server->BME280->temperature, 7,  temp_buf);
 	gcvt(server->BME280->humidity, 7,  hum_buf);
-	sprintf(message, "{\"Temp\": %s, \"Hum\": %s}", temp_buf, hum_buf);
+	sprintf(message, "{\"Temp\": %s, \"Hum\": %s, lamp1: %u}", temp_buf, hum_buf, server->GPIO->lamp1);
 
 	char buffer[1024] = {0}; 
 	send(server->socket_n, message, strlen(message), 0 ); 
@@ -112,8 +114,10 @@ int main(int argc, char ** argv)
 {
 	struct bme280 *BME280 = malloc(sizeof(struct bme280));
 	struct distr_server *server = malloc(sizeof(struct distr_server));
+	struct gpio *GPIO = malloc(sizeof(struct gpio));
 	config_server(server);
 	server->BME280 = BME280;
+	server->GPIO = GPIO;
 	init_bme280_attr(BME280);	
 
 	signal(SIGALRM, sig_handler);
