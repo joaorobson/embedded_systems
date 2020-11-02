@@ -36,9 +36,9 @@ def show():
                 exit(0) 
             json_data = json.loads(data)
             stdscr.clear()
-            stdscr.addstr(0,0,str(json_data.get("Temp", "")))
-            stdscr.addstr(1,0,str(json_data.get("Hum", "")))
-            stdscr.addstr(2,0,str(json_data.get("Lamp1", "")))
+            stdscr.addstr(0,0,"Temperatura: " + str(json_data.get("Temp", "")))
+            stdscr.addstr(1,0,"Umidade: " + str(json_data.get("Hum", "")))
+            stdscr.addstr(2,0,"Lâmp. 1: " + str(json_data.get("Lamp1", "")))
             stdscr.addstr(3,0,"buf: {}".format(buf))
             stdscr.addstr(4,0,"n: {}".format(n))
             stdscr.refresh()
@@ -54,16 +54,22 @@ def show():
                           
     except KeyboardInterrupt:
         curses.endwin()
+        exit(0)
 
 def receive():
     global data
     s.listen()
     conn, addr = s.accept()
-    while True:
-        data = conn.recv(1024)
-        if not data:
-            exit(0) 
-        conn.sendall(data)
+    try:
+        while True:
+            data = conn.recv(1024)
+            if not data:
+                exit(0) 
+            conn.sendall(data)
+
+    except KeyboardInterrupt:
+        curses.endwin()
+        exit(0)
 
 if __name__ == "__main__":
     signal.signal(signal.SIGINT, signal_handler)
