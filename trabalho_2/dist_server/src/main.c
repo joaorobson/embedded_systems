@@ -39,12 +39,12 @@ void* get_sensors_states_thread(void* _args){
         struct distr_server *server= (struct distr_server*) _args;
         
         get_sensors_states(server->GPIO);
-    printf("===== %u\n", server->alarm);
         uint8_t level_change = check_level_changing(server->GPIO);
+		printf("=====%u\n", level_change);
         if(server->alarm != level_change){
             server->alarm = level_change;    
             char *message = (char*) malloc(300*sizeof(char));
-            sprintf(message, "{\"alarm\": %u}", server->alarm);
+            sprintf(message, "{\"alert\": %u}", server->alarm);
             send(server->socket_n, message, strlen(message), 0 ); 
 
             char buffer[1024] = {0}; 
