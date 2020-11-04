@@ -12,23 +12,6 @@ struct read_temperatures {
     float TE;
 };
 
-struct uart {
-	float TI;
-	float TR;
-	unsigned char get_TI_command;
-	unsigned char get_TR_command;
-	char device[20];
-    int read_TR;
-};
-
-struct temp_control {
-    float hysteresis;
-    int coolerIsOn;
-    int resistorIsOn;
-    struct uart *UART;
-    struct bme280 *BME280;
-};
-
 struct bme280 {
 	float temperature;
 	float humidity;
@@ -41,6 +24,7 @@ struct distr_server {
     struct bme280 *BME280;
     struct gpio *GPIO;
     int socket_n;
+    uint8_t alarm;
 };
 
 char* data_to_JSON(struct distr_server* server);

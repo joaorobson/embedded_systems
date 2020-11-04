@@ -17,6 +17,7 @@
 // $Id: RF22.h,v 1.21 2012/05/30 01:51:25 mikem Exp $
 #include <bcm2835.h>
 #include "gpio.h"
+#include "utils.h"
  
 int switch_lamp_state(int lamp_number, uint8_t state){
 	if((lamp_number < 1) || (lamp_number > 4)){
@@ -50,6 +51,16 @@ int switch_lamp_state(int lamp_number, uint8_t state){
 		default:
 			return 0;
 	}
+}
+
+uint8_t check_level_changing(struct gpio* GPIO){
+    if(GPIO->pres_sens1 || GPIO->pres_sens2 ||
+       GPIO->open_sens1 || GPIO->open_sens2 ||
+       GPIO->open_sens3 || GPIO->open_sens4 ||
+       GPIO->open_sens5 || GPIO->open_sens6){
+            return 1;
+       }
+       return 0;
 }
 
 void set_sensors_mode(){

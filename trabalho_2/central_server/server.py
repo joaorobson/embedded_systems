@@ -28,6 +28,8 @@ def show():
     line = 1
     buf = ""
     n = ""
+    alarm = -1
+    alarm_msg = ""
     global data
     try:
         while True:
@@ -36,13 +38,24 @@ def show():
                 exit(0) 
             json_data = json.loads(data)
             stdscr.clear()
-            stdscr.addstr(0,0,"Temperatura: " + str(json_data.get("Temp", "")) + "ºC")
+            alarm_json = json_data.get("alarm", -1)
+            if alarm_json == 1:
+                alarm = 1
+            elif alarm_json == 0:
+                alarm = 0
+            if alarm == 1:
+                alarm_msg = "ALERTA"
+            elif alarm == 0:
+                alarm_msg = ""
+
+            stdscr.addstr(0,0,alarm_msg)
+            #stdscr.addstr(0,0,"Temperatura: " + str(json_data.get("Temp", "")) + "ºC")
             stdscr.addstr(1,0,"Umidade: " + str(json_data.get("Hum", "")) + "%")
             stdscr.addstr(2,0,"Lâmp. 1: " + str(json_data.get("Lamp1", "")))
             stdscr.addstr(3,0,"Lâmp. 2: " + str(json_data.get("Lamp2", "")))
             stdscr.addstr(4,0,"Lâmp. 3: " + str(json_data.get("Lamp3", "")))
             stdscr.addstr(5,0,"Lâmp. 4: " + str(json_data.get("Lamp4", "")))
-            stdscr.addstr(6,0,"Ar Cond. 1: " + str(json_data.get("Lamp4", "")))
+            stdscr.addstr(0,18,"Ar Cond. 1: " + str(json_data.get("Lamp4", "")))
             stdscr.addstr(7,0,"Ar Cond. 2: " + str(json_data.get("Lamp4", "")))
             stdscr.addstr(8,0,"Sens. Pres. 1: " + str(json_data.get("PresSens1", "")))
             stdscr.addstr(9,0,"Sens. Pres. 2: " + str(json_data.get("PresSens2", "")))

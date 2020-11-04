@@ -4,7 +4,7 @@
 #include <bcm2835.h>
 #include <stdio.h>
 #include <time.h> 
-// Input on RPi pin GPIO 15
+
 #define LAMP1_PIN RPI_V2_GPIO_P1_11
 #define LAMP2_PIN RPI_V2_GPIO_P1_12
 #define LAMP3_PIN RPI_V2_GPIO_P1_13
@@ -35,10 +35,10 @@ struct gpio {
 	uint8_t open_sens4;
 	uint8_t open_sens5;
 	uint8_t open_sens6;
-
 };
  
 int switch_lamp_state(int lamp_number, uint8_t state);
+uint8_t check_level_changing(struct gpio* GPIO);
 
 void set_sensors_mode();
 

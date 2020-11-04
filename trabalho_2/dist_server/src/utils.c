@@ -33,6 +33,7 @@ char* data_to_JSON(struct distr_server* server){
 
     return message;
 }
+
 void* get_temperature_and_humidity(void* args){
 	struct bme280 *temp_args = (struct bme280*) args;
     read_bme280_data(&temp_args->temperature,

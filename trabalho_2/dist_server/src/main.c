@@ -36,8 +36,24 @@ void* get_sensors_states_thread(void* _args){
     pthread_mutex_lock(&sensors_mutex);
     while(!read_sensors && run){
         pthread_cond_wait(&sensors_cond, &sensors_mutex);
-        struct distr_server *server = (struct distr_server*) _args;
+        struct distr_server *server= (struct distr_server*) _args;
+        
         get_sensors_states(server->GPIO);
+    printf("===== %u\n", server->alarm);
+        uint8_t level_change = check_level_changing(server->GPIO);
+        if(server->alarm != level_change){
+            server->alarm = level_change;    
+            char *message = (char*) malloc(300*sizeof(char));
+            sprintf(message, "{\"alarm\": %u}", server->alarm);
+            send(server->socket_n, message, strlen(message), 0 ); 
+
+            char buffer[1024] = {0}; 
+            int valread = read(server->socket_n, buffer, 1024); 
+            if(valread == 0){
+                exit(0);
+            }
+        }
+        
         read_sensors = 0;
     }
     pthread_mutex_unlock(&sensors_mutex);
@@ -170,6 +186,7 @@ int main(int argc, char ** argv)
 
     server->BME280 = BME280;
     server->GPIO = GPIO;
+    server->alarm = 0;
     init_bme280_attr(BME280);   
     set_sensors_mode();
 
