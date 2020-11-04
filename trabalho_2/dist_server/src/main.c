@@ -22,8 +22,10 @@ pthread_cond_t bme280_cond, sensors_cond, send_cond;
 
 volatile sig_atomic_t run = 1; 
 volatile sig_atomic_t read_bme280 = 0,
-					  read_sensors = 0,
-					  run_sending = 0; 
+                      read_sensors = 0,
+                      run_sending = 0,
+                      sending_counter = 0,
+                      bme_counter = 0;
 
 
 void stopWhile(int signum){
@@ -31,52 +33,58 @@ void stopWhile(int signum){
 }
 
 void* get_sensors_states_thread(void* _args){
-	pthread_mutex_lock(&sensors_mutex);
-	while(!read_sensors && run){
-		pthread_cond_wait(&sensors_cond, &sensors_mutex);
-		struct distr_server *server = (struct distr_server*) _args;
-		get_sensors_states(server->GPIO);
-
-		read_sensors = 0;
-	}
-	pthread_mutex_unlock(&sensors_mutex);
-	pthread_exit( NULL );
+    pthread_mutex_lock(&sensors_mutex);
+    while(!read_sensors && run){
+        pthread_cond_wait(&sensors_cond, &sensors_mutex);
+        struct distr_server *server = (struct distr_server*) _args;
+        get_sensors_states(server->GPIO);
+        read_sensors = 0;
+    }
+    pthread_mutex_unlock(&sensors_mutex);
+    pthread_exit( NULL );
 }
 
 void* sending_thread(void* _args){
-	pthread_mutex_lock(&send_mutex);
-	while(!run_sending && run){
-		pthread_cond_wait(&send_cond, &send_mutex);
-		struct distr_server *server = (struct distr_server*) _args;
+    pthread_mutex_lock(&send_mutex);
+    while(!run_sending && run){
+        pthread_cond_wait(&send_cond, &send_mutex);
+        if(sending_counter == 5){
+            struct distr_server *server = (struct distr_server*) _args;
 
-		char *message = (char*) malloc(300*sizeof(char));
-		message = data_to_JSON(server);
+            char *message = (char*) malloc(300*sizeof(char));
+            message = data_to_JSON(server);
 
-		char buffer[1024] = {0}; 
-		send(server->socket_n, message, strlen(message), 0 ); 
-		int valread = read(server->socket_n, buffer, 1024); 
-		if(valread == 0){
-			exit(0);
-		}
-		printf("%s\n",buffer );
-		run_sending = 0;
-	}
-	pthread_mutex_unlock(&send_mutex);
-	pthread_exit( NULL );
+            char buffer[1024] = {0}; 
+            send(server->socket_n, message, strlen(message), 0 ); 
+            int valread = read(server->socket_n, buffer, 1024); 
+            if(valread == 0){
+                exit(0);
+            }
+            printf("%s\n",buffer );
+            sending_counter = 0;
+        }
+        run_sending = 0;
+        sending_counter++;
+    }
+    pthread_mutex_unlock(&send_mutex);
+    pthread_exit( NULL );
 }
 
 void* get_temp_and_hum_thread(void* _args){
-	pthread_mutex_lock(&bme280_mutex);
-	while(!read_bme280 && run){
-		pthread_cond_wait(&bme280_cond, &bme280_mutex);
-
-		struct distr_server *server = (struct distr_server*) _args;
-		get_temperature_and_humidity((void*)server->BME280);
-
-		read_bme280 = 0;
-	}
-	pthread_mutex_unlock(&bme280_mutex);
-	pthread_exit( NULL );
+    pthread_mutex_lock(&bme280_mutex);
+    while(!read_bme280 && run){
+        pthread_cond_wait(&bme280_cond, &bme280_mutex);
+        if(bme_counter == 5){
+            struct distr_server *server = (struct distr_server*) _args;
+            get_temperature_and_humidity((void*)server->BME280);
+            bme_counter = 0;
+        }
+        read_bme280 = 0;
+        bme_counter++;
+        
+    }
+    pthread_mutex_unlock(&bme280_mutex);
+    pthread_exit( NULL );
 }
 
 void sig_handler(int signum) {
@@ -105,10 +113,10 @@ void sig_handler(int signum) {
         }
         //pthread_mutex_unlock(&send_mutex);
         pthread_mutex_unlock(&sensors_mutex);
-        alarm(1);
+        ualarm(2e5, 2e5);
     }
     if(signum == SIGINT){
-		run = 0;
+        run = 0;
     }
 }
 
@@ -122,79 +130,79 @@ char* struct_to_JSON(struct bme280 *BME280){
   
 int config_server(struct distr_server *server) 
 { 
-	int sock = 0; 
-	struct sockaddr_in serv_addr; 
-	if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) 
-	{ 
-		printf("\n Socket creation error \n"); 
-		return -1; 
-	} 
+    int sock = 0; 
+    struct sockaddr_in serv_addr; 
+    if ((sock = socket(AF_INET, SOCK_STREAM, 0)) < 0) 
+    { 
+        printf("\n Socket creation error \n"); 
+        return -1; 
+    } 
 
-	serv_addr.sin_family = AF_INET; 
-	serv_addr.sin_port = htons(PORT); 
-	
-	if(inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr)<=0) 
-	{ 
-		printf("\nInvalid address/ Address not supported \n"); 
-		return -1; 
-	} 
+    serv_addr.sin_family = AF_INET; 
+    serv_addr.sin_port = htons(PORT); 
+    
+    if(inet_pton(AF_INET, "127.0.0.1", &serv_addr.sin_addr)<=0) 
+    { 
+        printf("\nInvalid address/ Address not supported \n"); 
+        return -1; 
+    } 
 
-	if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) 
-	{ 
-		printf("\nConnection Failed \n"); 
-		return -1; 
-	} 
-	server->socket_n = sock;
-	return 0;
+    if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0) 
+    { 
+        printf("\nConnection Failed \n"); 
+        return -1; 
+    } 
+    server->socket_n = sock;
+    return 0;
 } 
 
 
 int main(int argc, char ** argv)
 {
-	struct bme280 *BME280 = malloc(sizeof(struct bme280));
-	struct distr_server *server = malloc(sizeof(struct distr_server));
-	struct gpio *GPIO = malloc(sizeof(struct gpio));
+    struct bme280 *BME280 = malloc(sizeof(struct bme280));
+    struct distr_server *server = malloc(sizeof(struct distr_server));
+    struct gpio *GPIO = malloc(sizeof(struct gpio));
 
-	int server_state = config_server(server);
-	if(server_state == -1){
-		exit(1);
-	}
+    int server_state = config_server(server);
+    if(server_state == -1){
+        exit(1);
+    }
 
-	server->BME280 = BME280;
-	server->GPIO = GPIO;
-	init_bme280_attr(BME280);	
-	set_sensors_mode();
+    server->BME280 = BME280;
+    server->GPIO = GPIO;
+    init_bme280_attr(BME280);   
+    set_sensors_mode();
 
-	signal(SIGALRM, sig_handler);
-	signal(SIGINT, sig_handler);
-	alarm(1);
+    signal(SIGALRM, sig_handler);
+    signal(SIGINT, sig_handler);
+    ualarm(2e5, 2e5);
 
-	pthread_mutex_init(&bme280_mutex, NULL);
-	pthread_mutex_init(&send_mutex, NULL);
-	pthread_mutex_init(&sensors_mutex, NULL);
+    pthread_mutex_init(&bme280_mutex, NULL);
+    pthread_mutex_init(&send_mutex, NULL);
+    pthread_mutex_init(&sensors_mutex, NULL);
 
-	pthread_cond_init (&bme280_cond, NULL);
-	pthread_cond_init (&send_cond, NULL);
-	pthread_cond_init (&sensors_cond, NULL);
+    pthread_cond_init (&bme280_cond, NULL);
+    pthread_cond_init (&send_cond, NULL);
+    pthread_cond_init (&sensors_cond, NULL);
 
-	pthread_t threads[3];
-	pthread_create(&threads[0], NULL, sending_thread, (void*)server);
-	pthread_create(&threads[1], NULL, get_temp_and_hum_thread, (void*)server);
-	pthread_create(&threads[2], NULL, get_sensors_states_thread, (void*)server);
+    pthread_t threads[3];
+    pthread_create(&threads[0], NULL, sending_thread, (void*)server);
+    pthread_create(&threads[1], NULL, get_temp_and_hum_thread, (void*)server);
+    pthread_create(&threads[2], NULL, get_sensors_states_thread, (void*)server);
 
-	while(run){}
+    while(run){}
 
-	pthread_mutex_destroy(&bme280_mutex);
-	pthread_mutex_destroy(&send_mutex);
-	pthread_mutex_destroy(&sensors_mutex);
+    pthread_mutex_destroy(&bme280_mutex);
+    pthread_mutex_destroy(&send_mutex);
+    pthread_mutex_destroy(&sensors_mutex);
 
-	pthread_cond_destroy(&bme280_cond); 
-	pthread_cond_destroy(&send_cond); 
-	pthread_cond_destroy(&sensors_cond); 
+    pthread_cond_destroy(&bme280_cond); 
+    pthread_cond_destroy(&send_cond); 
+    pthread_cond_destroy(&sensors_cond); 
 
     close(server->socket_n); 
-	bcm2835_close();
-	
+    bcm2835_close();
+    
 
     return 0;
 }
