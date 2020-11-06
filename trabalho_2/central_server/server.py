@@ -35,10 +35,10 @@ class Server():
 
         while self.run_server:
             self.data = conn.recv(1024)
-            self.json_data = json.loads(self.data)
             if not self.data:
                 self.receive_socket_.close()
                 exit(0) 
+            self.json_data = json.loads(self.data)
             conn.sendall(self.data)
 
     def send(self, data):

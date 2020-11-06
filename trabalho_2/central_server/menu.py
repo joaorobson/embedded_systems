@@ -28,8 +28,10 @@ class MenuHandler(object):
         elif self.position >= len(self.items):
             self.position = len(self.items) - 1
 
+
     def check_for_alert(self, json_data, alert):
-        alert_json = json_data.get("alert", -1)
+
+        alert_json = json_data.get("Alert", -1)
         alert_msg = ""
         if alert_json == 1:
             alert = 1
@@ -37,7 +39,7 @@ class MenuHandler(object):
             alert = 0
 
         if alert == 1:
-            alert_msg = "ALERTA"
+            alert_msg = "ALERTA!!!!!"
         elif alert == 0:
             alert_msg = ""
     
@@ -69,15 +71,14 @@ class MenuHandler(object):
 
 
     def show_devices_info(self, data):
-        #data = self.server.json_data.copy()
-        if not "alert" in data and data:
+        if not "Alert" in data and data:
             devices_names = ["Temperatura", "Umidade",
-                             "Lâmp. Cozinha", "Lâmp. Sala", "Lâmp. Quarto 1",
-                             "Lâmp. Quarto 2", "Ar Cond. Quarto 1", 
-                             "Ar Cond. Quarto 2", "Sens. Pres. Sala",
-                             "Sens. Pres. Cozinha", "Porta Cozinha",
-                             "Janela Cozinha", "Porta Sala", "Janela Sala",
-                             "Janela Quarto 1", "Janela Quarto 2"]
+                             "Lâmp. da Cozinha", "Lâmp. da Sala", "Lâmp. do Quarto 1",
+                             "Lâmp. do Quarto 2", "Ar Cond. do Quarto 1", 
+                             "Ar Cond. do Quarto 2", "Sens. Pres. da Sala",
+                             "Sens. Pres. da Cozinha", "Porta da Cozinha",
+                             "Janela da  Cozinha", "Porta da Sala", "Janela da Sala",
+                             "Janela do Quarto 1", "Janela do Quarto 2"]
 
             devices_keys = ["Temp", "Hum", "Lamp1", "Lamp2", "Lamp3", "Lamp4",
                             "AirC1","AirC2","PresSens1", "PresSens2", 
@@ -97,6 +98,8 @@ class MenuHandler(object):
         self.panel.top()
         self.panel.show()
         self.window.clear()
+        curses.start_color()
+        curses.init_pair(1, curses.COLOR_RED, curses.COLOR_BLACK)
         lampadas = [0, 0, 0]
         alert = -1
         alert_msg = ""
@@ -107,7 +110,7 @@ class MenuHandler(object):
             alert, alert_msg = self.check_for_alert(json_data, alert)
 
 
-            self.window.addstr(0,0, alert_msg + str(alert))
+            self.window.addstr(0,0, alert_msg, curses.color_pair(1))
             self.window.clrtoeol()
 
             self.show_devices_info(json_data)
