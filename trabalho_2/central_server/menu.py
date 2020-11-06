@@ -62,12 +62,13 @@ class MenuHandler(MenuTemplate):
 
     def check_for_alert(self, json_data, alert):
 
-        alert_json = json_data.get("Alert", -1)
-        alert_msg = ""
-        if alert_json == 1:
+        alert_json = json_data.get("Alert")
+        if alert == 0 and alert_json == 1:
             alert = 1
-        elif alert_json == 0:
+            self.server.save_log({"Alert": alert})
+        elif alert == 1 and alert_json == 0:
             alert = 0
+            self.server.save_log({"Alert": alert})
 
         if alert == 1:
             alert_msg = "ALERTA!!!!!"
@@ -75,27 +76,6 @@ class MenuHandler(MenuTemplate):
             alert_msg = ""
     
         return alert, alert_msg
-
-    def get_state_message(self, state, key):
-        if key.startswith("Lamp"):
-            if state == 1:
-                return "Ligada"
-            return "Desligada"
-
-        elif key.startswith("AirC"):
-            if state == 1:
-                return "Ligado"
-            return "Desligado"
-
-        elif key.startswith("PresSens"):
-            if state == 1:
-                return "Ativado"
-            return "Desativado"
-
-        elif key.startswith("OpenSens"):
-            if state == 1:
-                return "Aberta"
-            return "Fechada"
 
 
     def show_devices_info(self, data):
@@ -114,14 +94,22 @@ class MenuHandler(MenuTemplate):
                             "OpenSens5", "OpenSens6"]
             for index, (key, name) in enumerate(zip(devices_keys, devices_names)):
                 if key != "Temp" and key != "Hum":
-                    msg = self.get_state_message(data[key], key)
+                    msg = self.server.get_state_message(data[key], key)
+                    if "Sens" in key:
+                        color = curses.color_pair(4)
+                    elif "Lamp" in key:
+                        color = curses.color_pair(3)
+                    elif "Air" in key:
+                        color = curses.color_pair(2)
                 elif key == "Temp":
                     msg = "{} °C".format(data[key])
+                    color = curses.color_pair(5)
                 elif key == "Hum":
                     msg = "{} %".format(data[key])
+                    color = curses.color_pair(5)
 
                 self.window.addstr(index + 2, 0, 
-                                   "{}: {}".format(name, msg))
+                                   "{}: {}".format(name, msg), color)
                 self.window.clrtoeol()
         
     def display(self):
@@ -130,14 +118,21 @@ class MenuHandler(MenuTemplate):
         self.window.clear()
         curses.start_color()
         curses.init_pair(1, curses.COLOR_RED, curses.COLOR_BLACK)
-        alert = -1
+        curses.init_pair(2, curses.COLOR_BLUE, curses.COLOR_BLACK)
+        curses.init_pair(3, curses.COLOR_GREEN, curses.COLOR_BLACK)
+        curses.init_pair(4, curses.COLOR_YELLOW, curses.COLOR_BLACK)
+        curses.init_pair(5, curses.COLOR_MAGENTA, curses.COLOR_BLACK)
+        alert = 0 
         alert_msg = ""
         global ref_temp
+
         while True:
             self.window.refresh()
             curses.doupdate()
+
             json_data = self.server.json_data.copy()
-            alert, alert_msg = self.check_for_alert(json_data, alert)
+            if "Alert" in json_data:
+                alert, alert_msg = self.check_for_alert(json_data.copy(), alert)
 
 
             self.window.addstr(0,0, alert_msg, curses.color_pair(1))
@@ -146,7 +141,6 @@ class MenuHandler(MenuTemplate):
             self.show_devices_info(json_data)
 
             self.window.addstr(1,0,"Temperatura de ref: {}".format(ref_temp))
-
 
             for index, item in enumerate(self.items):
                 if index == self.position:
@@ -244,7 +238,7 @@ class SubMenu(MenuTemplate):
                 elif c == curses.KEY_DOWN:
                     self.navigate(1)
                 elif c == curses.KEY_BACKSPACE:
-                    ref_temp = temp[:-1]
+                    ref_temp = ref_temp[:-1]
                 elif chr(c).isdigit() or chr(c) == ".":
                     ref_temp += chr(c)
 
@@ -269,7 +263,7 @@ class Menu(object):
             ("Ligar/Desligar Lâmpada da sala", "Lamp2"),
             ("Ligar/Desligar Lâmpada do quarto 1", "Lamp3"),
             ("Ligar/Desligar Lâmpada do quarto 2", "Lamp4"),
-            ("Ligar/Desligar Ar Cond. do quarto 1 ", "AirC1"),
+            ("Ligar/Desligar Ar Cond. do quarto 1", "AirC1"),
             ("Ligar/Desligar Ar Cond. do quarto 2", "AirC2"),
             ("Selecionar Temperatura", submenu.display),
             ("Sair", "Sair"),

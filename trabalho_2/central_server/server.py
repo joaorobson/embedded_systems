@@ -1,5 +1,10 @@
 import socket
+import os
 import json
+import csv
+from datetime import datetime
+
+FILENAME = "log.csv"
 
 class Server():
     def __init__(self, cs_host, cs_port, ds_host, ds_port):
@@ -39,7 +44,6 @@ class Server():
                 self.receive_socket_.close()
                 exit(0) 
             self.json_data = json.loads(self.data)
-            conn.sendall(self.data)
 
     def send(self, data):
         self.send_socket_.send(bytes(data.encode('utf-8')))
@@ -50,3 +54,51 @@ class Server():
         self.send_socket_.shutdown(socket.SHUT_RDWR)
         self.send_socket_.close()
 
+    def data_to_register(self, data):
+        if "Alert" in data:
+            if data["Alert"]:
+                return "Alarme ativado"
+            return "Alarme desativado"
+        elif "Device" in data:
+            device, state = data["Device"]
+            devices_names = {"Lamp1": "Lâmpada da cozinha",
+                             "Lamp2": "Lâmpada da sala",
+                             "Lamp3": "Lâmpada do quarto 1",
+                             "Lamp4": "Lâmpada do quarto 2",
+                             "AirC1": "Ar Cond. do quarto 1",
+                             "AirC2": "Ar Cond. do quarto 2"}
+            device_name = devices_names[device]
+            return device_name + " " + self.get_state_message(state, device)
+
+    def get_state_message(self, state, key):
+        if key.startswith("Lamp"):
+            if state == 1:
+                return "Ligada"
+            return "Desligada"
+
+        elif key.startswith("AirC"):
+            if state == 1:
+                return "Ligado"
+            return "Desligado"
+
+        elif key.startswith("PresSens"):
+            if state == 1:
+                return "Ativado"
+            return "Desativado"
+
+        elif key.startswith("OpenSens"):
+            if state == 1:
+                return "Aberta"
+            return "Fechada"
+
+    def save_log(self, data):
+        with open(FILENAME, 'a') as f:
+            writer = csv.writer(f)
+            # Check if csv file has a header
+            if os.path.getsize(FILENAME) == 0:
+                fields = ["Data/Hora", "Registro"]
+                writer.writerow(fields)
+
+            date_hour = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
+            register = self.data_to_register(data)
+            writer.writerow([date_hour, register])
