@@ -6,19 +6,21 @@ import random
 import threading
 import json
 
-class MenuHandler(object):
+global ref_temp
+ref_temp = ""
+
+
+class MenuTemplate():
     def __init__(self, items, stdscreen, server):
         self.window = stdscreen.subwin(0, 0)
-        self.window.nodelay(1)
         self.window.keypad(1)
+        self.window.nodelay(1)
         self.panel = panel.new_panel(self.window)
         self.panel.hide()
         panel.update_panels()
-        
-        self.position = 0 
-        self.items = items
-        self.items.append(("exit", "exit"))
 
+        self.position = 0
+        self.items = items
         self.server = server
 
     def navigate(self, n):
@@ -27,6 +29,35 @@ class MenuHandler(object):
             self.position = 0
         elif self.position >= len(self.items):
             self.position = len(self.items) - 1
+
+    def display(self):
+        pass
+
+
+class MenuHandler(MenuTemplate):
+    def __init__(self, items, stdscreen, server):
+        MenuTemplate.__init__(self, items, stdscreen, server)
+
+        #self.window = stdscreen.subwin(0, 0)
+        #self.window.keypad(1)
+        #self.window.nodelay(1)
+        #self.panel = panel.new_panel(self.window)
+        #self.panel.hide()
+        #panel.update_panels()
+        #
+        #self.position = 0 
+        #self.items = items
+        #self.items.append(("exit", "exit"))
+
+        #self.server = server
+
+    def navigate(self, n):
+        super().navigate(n)
+        #self.position += n
+        #if self.position < 0:
+        #    self.position = 0
+        #elif self.position >= len(self.items):
+        #    self.position = len(self.items) - 1
 
 
     def check_for_alert(self, json_data, alert):
@@ -44,9 +75,6 @@ class MenuHandler(object):
             alert_msg = ""
     
         return alert, alert_msg
-
-    def switch_device_state(self, device_name):
-        pass 
 
     def get_state_message(self, state, key):
         if key.startswith("Lamp"):
@@ -92,20 +120,19 @@ class MenuHandler(object):
                 elif key == "Hum":
                     msg = "{} %".format(data[key])
 
-                self.window.addstr(index + 1, 0, 
+                self.window.addstr(index + 2, 0, 
                                    "{}: {}".format(name, msg))
                 self.window.clrtoeol()
         
-
     def display(self):
         self.panel.top()
         self.panel.show()
         self.window.clear()
         curses.start_color()
         curses.init_pair(1, curses.COLOR_RED, curses.COLOR_BLACK)
-        lampadas = [0, 0, 0]
         alert = -1
         alert_msg = ""
+        global ref_temp
         while True:
             self.window.refresh()
             curses.doupdate()
@@ -117,6 +144,9 @@ class MenuHandler(object):
             self.window.clrtoeol()
 
             self.show_devices_info(json_data)
+
+            self.window.addstr(1,0,"Temperatura de ref: {}".format(ref_temp))
+
 
             for index, item in enumerate(self.items):
                 if index == self.position:
@@ -130,7 +160,9 @@ class MenuHandler(object):
             key = self.window.getch()
 
             if key in [curses.KEY_ENTER, ord("\n")]:
-                if self.position == len(self.items) - 1:
+                if self.position == len(self.items) - 2: # Selecionar Temperatura
+                    self.items[self.position][1]()
+                elif self.position == len(self.items) - 1: # Sair
                     break
                 else:
                     self.server.send('{{"Device": "{}"}}'.format(self.items[self.position][1]))
@@ -148,11 +180,89 @@ class MenuHandler(object):
         panel.update_panels()
         curses.doupdate()
 
+class SubMenu(MenuTemplate):
+    def __init__(self, items, stdscreen, server):
+        MenuTemplate.__init__(self, items, stdscreen, server)
+        #self.window = stdscreen.subwin(0, 0)
+        #self.window.keypad(1)
+        #self.panel = panel.new_panel(self.window)
+        #self.panel.hide()
+        #panel.update_panels()
+
+        #self.position = 0
+        #self.items = items
+
+    def navigate(self, n):
+        super().navigate(n)
+    #    self.position += n
+    #    if self.position < 0:
+    #        self.position = 0
+    #    elif self.position >= len(self.items):
+    #        self.position = len(self.items) - 1
+
+    def display(self):
+        self.panel.top()
+        self.panel.show()
+        self.window.clear()
+        stdscr = self.window
+        line = 1
+        buf = ""
+        n = ""
+        pos = 0
+        global ref_temp
+        curses.curs_set(0)
+
+        while True:
+            stdscr.refresh()
+            curses.doupdate()
+
+            for index, item in enumerate(self.items):
+                if index == self.position:
+                    mode = curses.A_REVERSE
+                else:
+                    mode = curses.A_NORMAL
+
+                if index != 0:
+                    msg = "%d. %s" % (index, item[0])
+                else:
+                    msg = "%d. %s: %s" % (index, item[0], ref_temp)
+                stdscr.addstr(1 + index, 0, msg, mode)
+                stdscr.clrtoeol()
+
+            line += 1
+            stdscr.refresh()
+
+            c = stdscr.getch()
+            if c != curses.ERR:
+                if c in [curses.KEY_ENTER, ord("\n")]:
+                    if self.position == len(self.items) - 1:
+                        break
+                    else:
+                        self.items[self.position][1]()
+                if c == curses.KEY_UP:
+                    self.navigate(-1)
+                elif c == curses.KEY_DOWN:
+                    self.navigate(1)
+                elif c == curses.KEY_BACKSPACE:
+                    ref_temp = temp[:-1]
+                elif chr(c).isdigit() or chr(c) == ".":
+                    ref_temp += chr(c)
+
+
+        self.window.clear()
+        self.panel.hide()
+        panel.update_panels()
+        curses.doupdate()
+
 
 class Menu(object):
     def __init__(self, stdscreen, server):
         self.screen = stdscreen
         curses.curs_set(0)
+
+        submenu_items = [("Nova temperatura", curses.beep), ("Salvar temperatura", "")]
+        submenu = SubMenu(submenu_items, self.screen, server)
+
 
         main_menu_items = [
             ("Ligar/Desligar Lâmpada da cozinha", "Lamp1"),
@@ -161,6 +271,8 @@ class Menu(object):
             ("Ligar/Desligar Lâmpada do quarto 2", "Lamp4"),
             ("Ligar/Desligar Ar Cond. do quarto 1 ", "AirC1"),
             ("Ligar/Desligar Ar Cond. do quarto 2", "AirC2"),
+            ("Selecionar Temperatura", submenu.display),
+            ("Sair", "Sair"),
         ]
         main_menu = MenuHandler(main_menu_items, self.screen, server)
         main_menu.display()
