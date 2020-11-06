@@ -1,106 +1,53 @@
-#!/usr/bin/env python3
-import curses
 import socket
-from time import sleep
-import threading
-import sys
-import signal
-import os
 import json
 
-global stdscr
-stdscr = curses.initscr()
-stdscr.nodelay(1) # set getch() non-blocking
-stdscr.timeout(100)
-curses.noecho()
-data = "{}"
-HOST = '127.0.0.1'  # Standard loopback interface address (localhost)
-PORT = 10010 # Port to listen on (non-privileged ports are > 1023)
-s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-s.bind((HOST, PORT))
+class Server():
+    def __init__(self, cs_host, cs_port, ds_host, ds_port):
+        self.cs_host = cs_host # Central server host
+        self.cs_port = cs_port # Central server port
+        self.ds_host = ds_host # Distr server host
+        self.ds_port = ds_port # Distr server port
 
+        self.receive_socket_ = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.send_socket_ = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
-def signal_handler(signal, frame):
-    curses.endwin()
-    sys.exit(0)
+        self.receive_socket_.bind((cs_host, cs_port))
 
-def show():
-    line = 1
-    buf = ""
-    n = ""
-    alarm = -1
-    alarm_msg = ""
-    global data
-    try:
-        while True:
-            if not data:
-                curses.endwin()
+        self.run_server = True
+        self.data = "{}"
+        self.json_data = json.loads(self.data)
+        
+        self.connect_to_dist_server()
+ 
+    def connect_to_dist_server(self):
+        self.connected_to_ds = False
+        print('Esperando servidor distribuído...')
+        while not self.connected_to_ds:
+            try:
+                self.send_socket_.connect((self.ds_host, self.ds_port))
+                self.connected_to_ds = True
+            except Exception as e:
+                pass #Do nothing, just try to connect again 
+
+    def receive(self):       
+        self.receive_socket_.listen()
+        conn, addr = self.receive_socket_.accept()
+
+        while self.run_server:
+            self.data = conn.recv(1024)
+            self.json_data = json.loads(self.data)
+            if not self.data:
+                self.receive_socket_.close()
                 exit(0) 
-            json_data = json.loads(data)
-            stdscr.clear()
-            alarm_json = json_data.get("alarm", -1)
-            if alarm_json == 1:
-                alarm = 1
-            elif alarm_json == 0:
-                alarm = 0
-            if alarm == 1:
-                alarm_msg = "ALERTA"
-            elif alarm == 0:
-                alarm_msg = ""
+            conn.sendall(self.data)
 
-            stdscr.addstr(0,0,alarm_msg)
-            #stdscr.addstr(0,0,"Temperatura: " + str(json_data.get("Temp", "")) + "ºC")
-            stdscr.addstr(1,0,"Umidade: " + str(json_data.get("Hum", "")) + "%")
-            stdscr.addstr(2,0,"Lâmp. 1: " + str(json_data.get("Lamp1", "")))
-            stdscr.addstr(3,0,"Lâmp. 2: " + str(json_data.get("Lamp2", "")))
-            stdscr.addstr(4,0,"Lâmp. 3: " + str(json_data.get("Lamp3", "")))
-            stdscr.addstr(5,0,"Lâmp. 4: " + str(json_data.get("Lamp4", "")))
-            stdscr.addstr(0,18,"Ar Cond. 1: " + str(json_data.get("Lamp4", "")))
-            stdscr.addstr(7,0,"Ar Cond. 2: " + str(json_data.get("Lamp4", "")))
-            stdscr.addstr(8,0,"Sens. Pres. 1: " + str(json_data.get("PresSens1", "")))
-            stdscr.addstr(9,0,"Sens. Pres. 2: " + str(json_data.get("PresSens2", "")))
-            stdscr.addstr(9,0,"Sens. Abert. 1: " + str(json_data.get("OpenSens1", "")))
-            stdscr.addstr(9,0,"Sens. Abert. 2: " + str(json_data.get("OpenSens2", "")))
-            stdscr.addstr(9,0,"Sens. Abert. 3: " + str(json_data.get("OpenSens3", "")))
-            stdscr.addstr(9,0,"Sens. Abert. 4: " + str(json_data.get("OpenSens4", "")))
-            stdscr.addstr(9,0,"Sens. Abert. 5: " + str(json_data.get("OpenSens5", "")))
-            stdscr.addstr(9,0,"Sens. Abert. 6: " + str(json_data.get("OpenSens6", "")))
-            stdscr.addstr(10,0,"buf: {}".format(buf))
-            stdscr.addstr(11,0,"n: {}".format(n))
-            stdscr.refresh()
+    def send(self, data):
+        self.send_socket_.sendall(bytes(data.encode('utf-8')))
+        self.send_socket_.recv(1024)
 
-            line += 1
-            c = stdscr.getch()
-            if c != curses.ERR:
-                if c == 10:
-                    n = buf
-                    buf = "" 
-                else:
-                    buf += chr(c)
-                          
-    except:
-        curses.endwin()
-        exit(0)
+    def close(self):
+        self.receive_socket_.shutdown(socket.SHUT_RDWR)
+        self.receive_socket_.close()
+        self.send_socket_.shutdown(socket.SHUT_RDWR)
+        self.send_socket_.close()
 
-def receive():
-    global data
-    s.listen()
-    conn, addr = s.accept()
-    try:
-        while True:
-            data = conn.recv(1024)
-            if not data:
-                exit(0) 
-            conn.sendall(data)
-
-    except KeyboardInterrupt:
-        curses.endwin()
-        exit(0)
-
-if __name__ == "__main__":
-    signal.signal(signal.SIGINT, signal_handler)
-
-    x = threading.Thread(target=show)
-    y = threading.Thread(target=receive)
-    x.start()
-    y.start()
