@@ -94,13 +94,17 @@ void* sending_thread(void* _args){
 void* receiving_thread(void* _args){
 	struct distr_server *server = (struct distr_server*) _args;
 
-	char buffer[1024] = {0};
-	int data = read(server->receiving_socket, buffer, 1024);
-	if(data == 0){
-		exit(0);
+	while(1){
+		char buffer[1024] = {0};
+		int data = recv(server->receiving_socket, buffer, 1024, 0);
+		if(data == 0){
+			exit(0);
+		}
+		char device[10];
+		sscanf(buffer, "{\"Device\": \"%[^\"}]\"}", device);
+		switch_device_state(device, server->GPIO);
+		printf("%s\n", buffer);
 	}
-	send(server->receiving_socket, buffer, strlen(buffer), 0 );
-	printf("recebeu %s\n", buffer);
 }
 
 void* get_temp_and_hum_thread(void* _args){
@@ -153,14 +157,6 @@ void sig_handler(int signum) {
     }
 }
 
-char* struct_to_JSON(struct bme280 *BME280){
-    char* json_str = (char*) malloc(200*sizeof(char));
-    sprintf(json_str, "{\"Temp:\" %f", 42.0);
-
-    return json_str;
-}
-
-
 int config_sender(struct distr_server *server)
 {
     int sock = 0;
@@ -181,11 +177,10 @@ int config_sender(struct distr_server *server)
         return -1;
     }
 
-    if (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
+    while (connect(sock, (struct sockaddr *)&serv_addr, sizeof(serv_addr)) < 0)
     {
-		perror("ola");
-        printf("\nConnection Failed \n");
-        return -1;
+        printf("\nConnection Failed. Trying again... \n");
+        //return -1;
     }
     server->sending_socket = sock;
     return 0;

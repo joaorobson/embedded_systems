@@ -19,37 +19,37 @@
 #include "gpio.h"
 #include "utils.h"
  
-int switch_lamp_state(int lamp_number, uint8_t state){
-	if((lamp_number < 1) || (lamp_number > 4)){
-		return 1;
+int switch_device_state(char* device_name, struct gpio* GPIO){
+    uint8_t state;
+    if(strcmp(device_name, "Lamp1") == 0){
+        state = 1 - GPIO->lamp1;
+        bcm2835_gpio_fsel(LAMP1_PIN, BCM2835_GPIO_FSEL_OUTP);
+        bcm2835_gpio_write(LAMP1_PIN, state);
+    }
+    else if(strcmp(device_name, "Lamp2") == 0){
+        state = 1 - GPIO->lamp2;
+        bcm2835_gpio_fsel(LAMP2_PIN, BCM2835_GPIO_FSEL_OUTP);
+        bcm2835_gpio_write(LAMP2_PIN, state);
+    }
+    else if(strcmp(device_name, "Lamp3") == 0){
+        state = 1 - GPIO->lamp3;
+        bcm2835_gpio_fsel(LAMP3_PIN, BCM2835_GPIO_FSEL_OUTP);
+        bcm2835_gpio_write(LAMP3_PIN, state);
+    }
+    else if(strcmp(device_name, "Lamp4") == 0){
+        state = 1 - GPIO->lamp4;
+        bcm2835_gpio_fsel(LAMP4_PIN, BCM2835_GPIO_FSEL_OUTP);
+        bcm2835_gpio_write(LAMP4_PIN, state);
 	}
-    else if(!bcm2835_init()){
-        return 1;
+    else if(strcmp(device_name, "AirC1") == 0){
+        state = 1 - GPIO->air_c1;
+        bcm2835_gpio_fsel(AIR_C1_PIN, BCM2835_GPIO_FSEL_OUTP);
+        bcm2835_gpio_write(AIR_C1_PIN, state);
 	}
-
-	switch(lamp_number){
-		case 1:
-			bcm2835_gpio_fsel(LAMP1_PIN, BCM2835_GPIO_FSEL_OUTP);
-			bcm2835_gpio_write(LAMP1_PIN, state);
-			bcm2835_close();
-			return 0;
-		case 2:
-			bcm2835_gpio_fsel(LAMP2_PIN, BCM2835_GPIO_FSEL_OUTP);
-			bcm2835_gpio_write(LAMP2_PIN, state);
-			bcm2835_close();
-			return 0;
-		case 3:
-			bcm2835_gpio_fsel(LAMP3_PIN, BCM2835_GPIO_FSEL_OUTP);
-			bcm2835_gpio_write(LAMP3_PIN, state);
-			bcm2835_close();
-			return 0;
-		case 4:
-			bcm2835_gpio_fsel(LAMP4_PIN, BCM2835_GPIO_FSEL_OUTP);
-			bcm2835_gpio_write(LAMP4_PIN, state);
-			bcm2835_close();
-			return 0;
-		default:
-			return 0;
+    else if(strcmp(device_name, "AirC2") == 0){
+        state = 1 - GPIO->air_c2;
+        bcm2835_gpio_fsel(AIR_C2_PIN, BCM2835_GPIO_FSEL_OUTP);
+        bcm2835_gpio_write(AIR_C2_PIN, state);
 	}
 }
 
