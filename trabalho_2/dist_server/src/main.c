@@ -46,8 +46,10 @@ void* get_sensors_states_thread(void* _args){
         uint8_t level_change = check_level_changing(server->GPIO);
         if(server->alarm != level_change){
             server->alarm = level_change;
+
             char *message = (char*) malloc(300*sizeof(char));
-            sprintf(message, "{\"alert\": %u}", server->alarm);
+            sprintf(message, "{\"Alert\": %u}", server->alarm);
+
             send(server->sending_socket, message, strlen(message), 0 );
 
             char buffer[1024] = {0};
