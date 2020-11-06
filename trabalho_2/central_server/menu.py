@@ -61,7 +61,6 @@ class MenuHandler(MenuTemplate):
 
 
     def check_for_alert(self, json_data, alert):
-
         alert_json = json_data.get("Alert")
         if alert == 0 and alert_json == 1:
             alert = 1
@@ -77,6 +76,12 @@ class MenuHandler(MenuTemplate):
     
         return alert, alert_msg
 
+    def get_devices_current_state(self, devices, data):
+        devices_keys = ["Lamp1", "Lamp2", "Lamp3", "Lamp4",
+                        "AirC1","AirC2"]
+        if not "Alert" in data and data:
+            return {key:data[key] for key in data if key in devices_keys}
+        return devices
 
     def show_devices_info(self, data):
         if not "Alert" in data and data:
@@ -124,6 +129,7 @@ class MenuHandler(MenuTemplate):
         curses.init_pair(5, curses.COLOR_MAGENTA, curses.COLOR_BLACK)
         alert = 0 
         alert_msg = ""
+        devices_state = {}
         global ref_temp
 
         while True:
@@ -132,13 +138,13 @@ class MenuHandler(MenuTemplate):
 
             json_data = self.server.json_data.copy()
             if "Alert" in json_data:
-                alert, alert_msg = self.check_for_alert(json_data.copy(), alert)
-
+                alert, alert_msg = self.check_for_alert(json_data, alert)
 
             self.window.addstr(0,0, alert_msg, curses.color_pair(1))
             self.window.clrtoeol()
 
             self.show_devices_info(json_data)
+            devices_state = self.get_devices_current_state(devices_state, json_data)
 
             self.window.addstr(1,0,"Temperatura de ref: {}".format(ref_temp))
 
@@ -159,7 +165,10 @@ class MenuHandler(MenuTemplate):
                 elif self.position == len(self.items) - 1: # Sair
                     break
                 else:
-                    self.server.send('{{"Device": "{}"}}'.format(self.items[self.position][1]))
+                    device = self.items[self.position][1]
+                    self.server.send('{{"Device": "{}"}}'.format(device))
+
+                    self.server.save_log({"Device": (device, 1 - devices_state[device])})
 
             elif key == curses.KEY_UP:
                 self.navigate(-1)
@@ -198,16 +207,12 @@ class SubMenu(MenuTemplate):
         self.panel.top()
         self.panel.show()
         self.window.clear()
-        stdscr = self.window
-        line = 1
-        buf = ""
-        n = ""
-        pos = 0
-        global ref_temp
         curses.curs_set(0)
 
+        global ref_temp
+
         while True:
-            stdscr.refresh()
+            self.window.refresh()
             curses.doupdate()
 
             for index, item in enumerate(self.items):
@@ -220,13 +225,11 @@ class SubMenu(MenuTemplate):
                     msg = "%d. %s" % (index, item[0])
                 else:
                     msg = "%d. %s: %s" % (index, item[0], ref_temp)
-                stdscr.addstr(1 + index, 0, msg, mode)
-                stdscr.clrtoeol()
+                self.window.addstr(1 + index, 0, msg, mode)
+                self.window.clrtoeol()
 
-            line += 1
-            stdscr.refresh()
+            c = self.window.getch()
 
-            c = stdscr.getch()
             if c != curses.ERR:
                 if c in [curses.KEY_ENTER, ord("\n")]:
                     if self.position == len(self.items) - 1:
