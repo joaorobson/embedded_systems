@@ -23,7 +23,8 @@ struct bme280 {
 struct distr_server {
     struct bme280 *BME280;
     struct gpio *GPIO;
-    int socket_n;
+    int receiving_socket;
+    int sending_socket;
     uint8_t alarm;
 };
 
