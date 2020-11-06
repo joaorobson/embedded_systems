@@ -42,8 +42,7 @@ class Server():
             conn.sendall(self.data)
 
     def send(self, data):
-        self.send_socket_.sendall(bytes(data.encode('utf-8')))
-        self.send_socket_.recv(1024)
+        self.send_socket_.send(bytes(data.encode('utf-8')))
 
     def close(self):
         self.receive_socket_.shutdown(socket.SHUT_RDWR)

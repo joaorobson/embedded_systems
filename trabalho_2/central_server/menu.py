@@ -87,11 +87,14 @@ class MenuHandler(object):
             for index, (key, name) in enumerate(zip(devices_keys, devices_names)):
                 if key != "Temp" and key != "Hum":
                     msg = self.get_state_message(data[key], key)
-                else:
-                    msg = data[key]
+                elif key == "Temp":
+                    msg = "{} °C".format(data[key])
+                elif key == "Hum":
+                    msg = "{} %".format(data[key])
 
                 self.window.addstr(index + 1, 0, 
                                    "{}: {}".format(name, msg))
+                self.window.clrtoeol()
         
 
     def display(self):
@@ -130,8 +133,7 @@ class MenuHandler(object):
                 if self.position == len(self.items) - 1:
                     break
                 else:
-                    lampadas[self.position] = 1 - lampadas[self.position]
-                    self.server.send('{{"Lamp{}": {}}}'.format(self.position, lampadas[self.position]))
+                    self.server.send('{{"Device": "{}"}}'.format(self.items[self.position][1]))
 
             elif key == curses.KEY_UP:
                 self.navigate(-1)
@@ -153,12 +155,12 @@ class Menu(object):
         curses.curs_set(0)
 
         main_menu_items = [
-            ("Ligar/Desligar Lâmpada da cozinha", curses.beep),
-            ("Ligar/Desligar Lâmpada da sala", curses.beep),
-            ("Ligar/Desligar Lâmpada do quarto 1", curses.beep),
-            ("Ligar/Desligar Lâmpada do quarto 2", curses.beep),
-            ("Ligar/Desligar Ar Cond. do quarto 1 ", curses.beep),
-            ("Ligar/Desligar Ar Cond. do quarto 2", curses.beep),
+            ("Ligar/Desligar Lâmpada da cozinha", "Lamp1"),
+            ("Ligar/Desligar Lâmpada da sala", "Lamp2"),
+            ("Ligar/Desligar Lâmpada do quarto 1", "Lamp3"),
+            ("Ligar/Desligar Lâmpada do quarto 2", "Lamp4"),
+            ("Ligar/Desligar Ar Cond. do quarto 1 ", "AirC1"),
+            ("Ligar/Desligar Ar Cond. do quarto 2", "AirC2"),
         ]
         main_menu = MenuHandler(main_menu_items, self.screen, server)
         main_menu.display()
