@@ -14,7 +14,7 @@ No terminal do servidor central, um menu como o seguinte será mostrado:
 
 ![menu](https://github.com/joaorobson/embedded_systems/blob/master/trabalho_2/menu.png)
 
-Por meio dele, o estado das portas e janelas e dos dispositivos (lâmpadas e ar condicionados) podem ser monitorados,
+Por meio dele, o estado das portas e janelas e dos dispositivos (lâmpadas e ar condicionados) pode ser monitorado,
 assim como nele podem ser configurados a temperatura do ar condicionado e o estado (desligado(a)/ligado(a)) dos dispositivos.
 No caso de haver alguma porta ou janela aberta, é mostrado um alerta também. 
 
