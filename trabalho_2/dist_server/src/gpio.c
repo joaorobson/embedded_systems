@@ -18,8 +18,9 @@
 #include <bcm2835.h>
 #include "gpio.h"
 #include "utils.h"
+#include <string.h>
  
-int switch_device_state(char* device_name, struct gpio* GPIO){
+void switch_device_state(char* device_name, struct gpio* GPIO){
     uint8_t state;
     if(strcmp(device_name, "Lamp1") == 0){
         state = 1 - GPIO->lamp1;
@@ -63,7 +64,7 @@ uint8_t check_level_changing(struct gpio* GPIO){
        return 0;
 }
 
-void set_sensors_mode(){
+uint8_t set_sensors_mode(){
     if (!bcm2835_init()){
         return 1;
 	}
@@ -82,6 +83,7 @@ void set_sensors_mode(){
 	bcm2835_gpio_fsel(OPEN_SENS4_PIN, BCM2835_GPIO_FSEL_INPT);
 	bcm2835_gpio_fsel(OPEN_SENS5_PIN, BCM2835_GPIO_FSEL_INPT);
 	bcm2835_gpio_fsel(OPEN_SENS6_PIN, BCM2835_GPIO_FSEL_INPT);
+	return 0;
 }
 
 void get_sensors_states(struct gpio* GPIO){

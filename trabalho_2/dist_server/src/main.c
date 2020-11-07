@@ -8,8 +8,8 @@
 #include <stdbool.h>
 #include <unistd.h>
 #include <float.h>
+#include <arpa/inet.h>
 #include "utils.h"
-//#include "gpio.h"
 
 #define FLT_EXPO_SIZE 5
 #define MAX 80
@@ -176,7 +176,7 @@ int config_sender(struct distr_server *server)
 }
 
 int config_receiver(struct distr_server *server){
-	int sock, new_socket, valread;
+	int sock, new_socket;
     struct sockaddr_in address;
     int opt = 1;
     int addrlen = sizeof(address);

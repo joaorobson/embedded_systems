@@ -37,10 +37,10 @@ struct gpio {
 	uint8_t open_sens6;
 };
  
-int switch_lamp_state(int lamp_number, uint8_t state);
+void switch_device_state(char* device_name, struct gpio* GPIO);
 uint8_t check_level_changing(struct gpio* GPIO);
 
-void set_sensors_mode();
+uint8_t set_sensors_mode();
 
 void get_sensors_states(struct gpio* GPIO);
 
