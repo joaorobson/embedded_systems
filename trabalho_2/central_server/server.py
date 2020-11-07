@@ -58,6 +58,9 @@ class Server():
         self.send_socket_.shutdown(socket.SHUT_RDWR)
         self.send_socket_.close()
 
+        if self.play_alarm_sound:
+            self.control_alarm(0)
+
     def data_to_register(self, data):
         if "Alert" in data:
             if data["Alert"]:
