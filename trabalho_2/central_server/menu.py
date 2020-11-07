@@ -6,8 +6,8 @@ import random
 import threading
 import json
 
-global ref_temp
-ref_temp = "25.0"
+global airc_temp
+airc_temp = "25.0"
 
 
 class MenuTemplate():
@@ -123,7 +123,7 @@ class MenuHandler(MenuTemplate):
         alert = 0 
         alert_msg = ""
         devices_state = {}
-        global ref_temp
+        global airc_temp
 
         while True:
             self.window.refresh()
@@ -139,7 +139,7 @@ class MenuHandler(MenuTemplate):
             self.show_devices_info(json_data)
             devices_state = self.get_devices_current_state(devices_state, json_data)
 
-            self.window.addstr(1,0,"Temperatura de ref: {}".format(ref_temp))
+            self.window.addstr(1,0,"Temperatura do Ar Cond.: {}".format(airc_temp))
 
             for index, item in enumerate(self.items):
                 if index == self.position:
@@ -183,8 +183,8 @@ class SubMenu(MenuTemplate):
     def navigate(self, n):
         super().navigate(n)
 
-    def validate_ref_temp(self, ref_temp):
-        if float(ref_temp) < 15.0 or float(ref_temp) > 30.0:
+    def validate_airc_temp(self, airc_temp):
+        if float(airc_temp) < 15.0 or float(airc_temp) > 30.0:
             return "Temperatura inválida! Selecione um valor entre 15.0 e 30.0 °C"
         return ""
 
@@ -198,7 +198,7 @@ class SubMenu(MenuTemplate):
         self.window.clear()
         curses.curs_set(0)
 
-        global ref_temp
+        global airc_temp
 
         while True:
             self.window.refresh()
@@ -213,7 +213,7 @@ class SubMenu(MenuTemplate):
                 if index != 0:
                     msg = "%d. %s" % (index, item[0])
                 else:
-                    msg = "%d. %s: %s" % (index, item[0], ref_temp)
+                    msg = "%d. %s: %s" % (index, item[0], airc_temp)
                 self.window.addstr(1 + index, 0, msg, mode)
                 self.window.clrtoeol()
 
@@ -222,10 +222,10 @@ class SubMenu(MenuTemplate):
             if c != curses.ERR:
                 if c in [curses.KEY_ENTER, ord("\n")]:
                     if self.position == len(self.items) - 1:
-                        invalid_temp = self.validate_ref_temp(ref_temp)
+                        invalid_temp = self.validate_airc_temp(airc_temp)
                         if invalid_temp:
                             self.window.addstr(5, 0, invalid_temp, curses.color_pair(1))
-                            ref_temp = ""
+                            airc_temp = ""
                         else:
                             break
                     else:
@@ -235,12 +235,12 @@ class SubMenu(MenuTemplate):
                 elif c == curses.KEY_DOWN:
                     self.navigate(1)
                 elif c == curses.KEY_BACKSPACE:
-                    ref_temp = ref_temp[:-1]
+                    airc_temp = airc_temp[:-1]
                 elif chr(c).isdigit() or chr(c) == ".":
-                    if chr(c) == "." and len(ref_temp) > 0 and "." not in ref_temp:
-                        ref_temp += chr(c)
+                    if chr(c) == "." and len(airc_temp) > 0 and "." not in airc_temp:
+                        airc_temp += chr(c)
                     elif chr(c).isdigit():
-                        ref_temp += chr(c)
+                        airc_temp += chr(c)
 
 
         self.window.clear()
@@ -265,7 +265,7 @@ class Menu(object):
             ("Ligar/Desligar Lâmpada do quarto 2", "Lamp4"),
             ("Ligar/Desligar Ar Cond. do quarto 1", "AirC1"),
             ("Ligar/Desligar Ar Cond. do quarto 2", "AirC2"),
-            ("Selecionar Temperatura", submenu.display),
+            ("Selecionar Temperatura do Ar Cond.", submenu.display),
             ("Sair", "Sair"),
         ]
         main_menu = MenuHandler(main_menu_items, self.screen, server)
