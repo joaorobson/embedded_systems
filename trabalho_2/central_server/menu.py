@@ -7,7 +7,7 @@ import threading
 import json
 
 global ref_temp
-ref_temp = ""
+ref_temp = "25.0"
 
 
 class MenuTemplate():
@@ -29,6 +29,9 @@ class MenuTemplate():
             self.position = 0
         elif self.position >= len(self.items):
             self.position = len(self.items) - 1
+
+    def init_term_colors(self);
+        pass
 
     def display(self):
         pass
@@ -180,6 +183,15 @@ class SubMenu(MenuTemplate):
     def navigate(self, n):
         super().navigate(n)
 
+    def validate_ref_temp(self, ref_temp):
+        if float(ref_temp) < 15.0 or float(ref_temp) > 30.0:
+            return "Temperatura inválida! Selecione um valor entre 15.0 e 30.0 °C"
+        return ""
+
+    def init_term_colors(self):
+        curses.start_color()
+        curses.init_pair(1, curses.COLOR_RED, curses.COLOR_BLACK)
+
     def display(self):
         self.panel.top()
         self.panel.show()
@@ -210,7 +222,12 @@ class SubMenu(MenuTemplate):
             if c != curses.ERR:
                 if c in [curses.KEY_ENTER, ord("\n")]:
                     if self.position == len(self.items) - 1:
-                        break
+                        invalid_temp = self.validate_ref_temp(ref_temp)
+                        if invalid_temp:
+                            self.window.addstr(5, 0, invalid_temp, curses.color_pair(1))
+                            ref_temp = ""
+                        else:
+                            break
                     else:
                         self.items[self.position][1]()
                 if c == curses.KEY_UP:
@@ -220,7 +237,10 @@ class SubMenu(MenuTemplate):
                 elif c == curses.KEY_BACKSPACE:
                     ref_temp = ref_temp[:-1]
                 elif chr(c).isdigit() or chr(c) == ".":
-                    ref_temp += chr(c)
+                    if chr(c) == "." and len(ref_temp) > 0 and "." not in ref_temp:
+                        ref_temp += chr(c)
+                    elif chr(c).isdigit():
+                        ref_temp += chr(c)
 
 
         self.window.clear()
