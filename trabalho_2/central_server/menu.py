@@ -30,7 +30,7 @@ class MenuTemplate():
         elif self.position >= len(self.items):
             self.position = len(self.items) - 1
 
-    def init_term_colors(self);
+    def init_term_colors(self):
         pass
 
     def display(self):
