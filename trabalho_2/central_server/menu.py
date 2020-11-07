@@ -38,35 +38,18 @@ class MenuHandler(MenuTemplate):
     def __init__(self, items, stdscreen, server):
         MenuTemplate.__init__(self, items, stdscreen, server)
 
-        #self.window = stdscreen.subwin(0, 0)
-        #self.window.keypad(1)
-        #self.window.nodelay(1)
-        #self.panel = panel.new_panel(self.window)
-        #self.panel.hide()
-        #panel.update_panels()
-        #
-        #self.position = 0 
-        #self.items = items
-        #self.items.append(("exit", "exit"))
-
-        #self.server = server
-
     def navigate(self, n):
         super().navigate(n)
-        #self.position += n
-        #if self.position < 0:
-        #    self.position = 0
-        #elif self.position >= len(self.items):
-        #    self.position = len(self.items) - 1
-
 
     def check_for_alert(self, json_data, alert):
         alert_json = json_data.get("Alert")
         if alert == 0 and alert_json == 1:
             alert = 1
+            self.server.control_alarm(alert)
             self.server.save_log({"Alert": alert})
         elif alert == 1 and alert_json == 0:
             alert = 0
+            self.server.control_alarm(alert)
             self.server.save_log({"Alert": alert})
 
         if alert == 1:
@@ -112,21 +95,28 @@ class MenuHandler(MenuTemplate):
                 elif key == "Hum":
                     msg = "{} %".format(data[key])
                     color = curses.color_pair(5)
+                try:
+                    self.window.addstr(index + 2, 0,
+                                       "{}: {}".format(name, msg), color)
+                    self.window.clrtoeol()
+                except curses.error:
+                    pass
 
-                self.window.addstr(index + 2, 0, 
-                                   "{}: {}".format(name, msg), color)
-                self.window.clrtoeol()
-        
-    def display(self):
-        self.panel.top()
-        self.panel.show()
-        self.window.clear()
+    def init_term_colors(self):
         curses.start_color()
         curses.init_pair(1, curses.COLOR_RED, curses.COLOR_BLACK)
         curses.init_pair(2, curses.COLOR_BLUE, curses.COLOR_BLACK)
         curses.init_pair(3, curses.COLOR_GREEN, curses.COLOR_BLACK)
         curses.init_pair(4, curses.COLOR_YELLOW, curses.COLOR_BLACK)
         curses.init_pair(5, curses.COLOR_MAGENTA, curses.COLOR_BLACK)
+
+    def display(self):
+        self.panel.top()
+        self.panel.show()
+        self.window.clear()
+
+        self.init_term_colors()
+
         alert = 0 
         alert_msg = ""
         devices_state = {}
@@ -186,22 +176,9 @@ class MenuHandler(MenuTemplate):
 class SubMenu(MenuTemplate):
     def __init__(self, items, stdscreen, server):
         MenuTemplate.__init__(self, items, stdscreen, server)
-        #self.window = stdscreen.subwin(0, 0)
-        #self.window.keypad(1)
-        #self.panel = panel.new_panel(self.window)
-        #self.panel.hide()
-        #panel.update_panels()
-
-        #self.position = 0
-        #self.items = items
 
     def navigate(self, n):
         super().navigate(n)
-    #    self.position += n
-    #    if self.position < 0:
-    #        self.position = 0
-    #    elif self.position >= len(self.items):
-    #        self.position = len(self.items) - 1
 
     def display(self):
         self.panel.top()

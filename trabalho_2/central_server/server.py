@@ -3,6 +3,9 @@ import os
 import json
 import csv
 from datetime import datetime
+import subprocess
+from subprocess import Popen, DEVNULL, STDOUT
+
 
 FILENAME = "log.csv"
 
@@ -23,6 +26,7 @@ class Server():
         self.json_data = json.loads(self.data)
         
         self.connect_to_dist_server()
+        self.play_alarm_sound = None
  
     def connect_to_dist_server(self):
         self.connected_to_ds = False
@@ -91,6 +95,16 @@ class Server():
                 return "Aberta"
             return "Fechada"
 
+    def control_alarm(self, alarm_state):
+        if alarm_state:
+            self.play_alarm_sound = Popen(["omxplayer", "nuclear.mp3"],
+                                          stdin=subprocess.PIPE,
+                                          stdout=DEVNULL,
+                                          stderr=STDOUT,
+                                          bufsize=0)
+        else:
+            self.play_alarm_sound.stdin.write(b'q')
+
     def save_log(self, data):
         with open(FILENAME, 'a') as f:
             writer = csv.writer(f)
@@ -101,4 +115,5 @@ class Server():
 
             date_hour = datetime.now().strftime("%d/%m/%Y %H:%M:%S")
             register = self.data_to_register(data)
+
             writer.writerow([date_hour, register])
