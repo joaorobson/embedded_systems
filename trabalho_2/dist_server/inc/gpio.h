@@ -38,59 +38,11 @@ struct gpio {
 };
  
 void switch_device_state(char* device_name, struct gpio* GPIO);
+
 uint8_t check_level_changing(struct gpio* GPIO);
 
 uint8_t set_sensors_mode();
 
 void get_sensors_states(struct gpio* GPIO);
-
-
-//int main(int argc, char **argv)
-//{
-//    // If you call this, it will not actually access the GPIO
-//    // Use for testing
-////    bcm2835_set_debug(1);
-// 
-//    if (!bcm2835_init())
-//        return 1;
-// 
-//    // Set the pin to be an output
-//    bcm2835_gpio_fsel(AIR_C1_PIN, BCM2835_GPIO_FSEL_OUTP);
-// 
-//    // Blink
-//        // Turn it on
-//	bcm2835_gpio_write(AIR_C1_PIN, HIGH);
-//	bcm2835_delay(2999);
-//	bcm2835_gpio_write(AIR_C1_PIN, LOW);
-//	bcm2835_delay(2999);
-//
-//    bcm2835_close();
-//    return 0;
-//    // Set RPI pin P1-15 to be an input
-//    bcm2835_gpio_fsel(LAMP1_PIN, BCM2835_GPIO_FSEL_INPT);
-//    bcm2835_gpio_fsel(LAMP2_PIN, BCM2835_GPIO_FSEL_INPT);
-//    //bcm2835_gpio_fsel(LAMP3_PIN, BCM2835_GPIO_FSEL_INPT);
-//    //  with a pullup
-//    bcm2835_gpio_set_pud(LAMP1_PIN, BCM2835_GPIO_PUD_UP);
-//    bcm2835_gpio_set_pud(LAMP2_PIN, BCM2835_GPIO_PUD_UP);
-//    //bcm2835_gpio_set_pud(LAMP3_PIN, BCM2835_GPIO_PUD_UP);
-// 
-//    // Blink
-//    while (1)
-//    {
-//        // Read some data
-//        uint8_t value1 = bcm2835_gpio_lev(LAMP1_PIN);
-//        uint8_t value2 = bcm2835_gpio_lev(LAMP2_PIN);
-//        uint8_t value3 = bcm2835_gpio_lev(LAMP3_PIN);
-//        printf("read from pin 15: %d %d %d\n", value1, value2, value3);
-//        
-//        // wait a bit
-//		sleep(1);
-//    }
-// 
-//    bcm2835_close();
-//    return 0;
-//}
-// 
 
 #endif

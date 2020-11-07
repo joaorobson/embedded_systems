@@ -18,9 +18,6 @@
 #define CS_HOST "192.168.0.53"
 #define DS_HOST "192.168.0.52"
 
-#define SA struct sockaddr
-
-
 pthread_mutex_t bme280_mutex, sensors_mutex, send_mutex;
 pthread_cond_t bme280_cond, sensors_cond, send_cond;
 
@@ -84,19 +81,19 @@ void* sending_thread(void* _args){
 }
 
 void* receiving_thread(void* _args){
-	struct distr_server *server = (struct distr_server*) _args;
+    struct distr_server *server = (struct distr_server*) _args;
 
-	while(1){
-		char buffer[1024] = {0};
-		int data = recv(server->receiving_socket, buffer, 1024, 0);
-		if(data == 0){
-			exit(0);
-		}
-		char device[10];
-		sscanf(buffer, "{\"Device\": \"%[^\"}]\"}", device);
-		switch_device_state(device, server->GPIO);
-		printf("%s\n", buffer);
-	}
+    while(1){
+        char buffer[1024] = {0};
+        int data = recv(server->receiving_socket, buffer, 1024, 0);
+        if(data == 0){
+            exit(0);
+        }
+        char device[10];
+        sscanf(buffer, "{\"Device\": \"%[^\"}]\"}", device);
+        switch_device_state(device, server->GPIO);
+        printf("%s\n", buffer);
+    }
 }
 
 void* get_temp_and_hum_thread(void* _args){
@@ -176,7 +173,7 @@ int config_sender(struct distr_server *server)
 }
 
 int config_receiver(struct distr_server *server){
-	int sock, new_socket;
+    int sock, new_socket;
     struct sockaddr_in address;
     int opt = 1;
     int addrlen = sizeof(address);
@@ -184,14 +181,14 @@ int config_receiver(struct distr_server *server){
     if ((sock = socket(AF_INET, SOCK_STREAM , 0)) == 0)
     {
         perror("socket failed");
-		return -1;
+        return -1;
     }
 
     if (setsockopt(sock, SOL_SOCKET, SO_REUSEADDR | SO_REUSEPORT,
                                                   &opt, sizeof(opt)))
     {
         perror("setsockopt");
-		return -1;
+        return -1;
     }
     address.sin_family = AF_INET;
     address.sin_addr.s_addr = INADDR_ANY; //inet_addr(DS_HOST);
@@ -201,23 +198,23 @@ int config_receiver(struct distr_server *server){
                                  sizeof(address))<0)
     {
         perror("bind failed");
-		return -1;
+        return -1;
     }
     if (listen(sock, 3) < 0)
     {
         perror("listen");
-		return -1;
+        return -1;
     }
 
     if ((new_socket = accept(sock, (struct sockaddr *)&address,
                        (socklen_t*)&addrlen))<0)
     {
         perror("accept");
-		return -1;
+        return -1;
     }
     server->receiving_socket = new_socket;
-	printf("Distributed server receiving requests\n");
-	return 0;
+    printf("Distributed server receiving requests\n");
+    return 0;
 }
 
 int main(int argc, char ** argv)
@@ -234,7 +231,7 @@ int main(int argc, char ** argv)
     int sender_status = config_sender(server);
     if(sender_status == -1){
         exit(1);
-	}
+    }
 
     server->BME280 = BME280;
     server->GPIO = GPIO;
