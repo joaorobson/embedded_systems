@@ -1,8 +1,8 @@
 {
     "env": {
         "MESSAGE": " MAC AND LINUX USERS!!!- change path from c:/... to ~/esp/... or as approirate for your enviroment",
-        "IDF_TOOLS": "/Users/renatocoral/.espressif/tools",
-        "IDF_PATH": "/Users/renatocoral/esp/esp-idf"
+        "IDF_TOOLS": "/home/joaorobson/.espressif/tools",
+        "IDF_PATH": "/home/joaorobson/esp/esp-idf"
     },
     "configurations": [
         {
@@ -106,7 +106,16 @@
                 "${IDF_PATH}/components/unity/include",
                 "${IDF_PATH}/components/unity/unity/src",
                 "${IDF_PATH}/components/wifi_provisioning/include",
-                "${IDF_PATH}/examples/common_components/protocol_examples_common/include"
+                "${IDF_PATH}/examples/common_components/protocol_examples_common/include",
+                "${IDF_PATH}/esp/esp-idf/components/freertos/port/riscv/include",
+                "/home/joaorobson/esp/esp-idf/components/freertos/port/xtensa/include",
+                "/home/joaorobson/esp/esp-idf/components/esp_timer/include",
+                "/home/joaorobson/esp/esp-idf/components/esp_system/include",
+                "/home/joaorobson/esp/esp-idf/components/newlib/platform_include",
+                "/home/joaorobson/.espressif/tools/xtensa-esp32-elf/esp-2020r3-8.4.0/xtensa-esp32-elf/xtensa-esp32-elf/sys-include",
+                "/home/joaorobson/esp/esp-idf/components/esp_hw_support/include",
+                "/home/joaorobson/esp/esp-idf/components/hal/include",
+                "/home/joaorobson/esp/esp-idf/components/hal/esp32/include"
             ],
             "defines": [],
             "cStandard": "c11",
