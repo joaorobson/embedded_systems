@@ -18,3 +18,18 @@ menu "Configuração do Wifi Configuration"
         help
             Configure o valor máximo de tentativas de conexão.
 endmenu
+
+menu "Chaves das API's"
+
+    config IPSTACK_KEY
+        string "ipstack key"
+        default "chave"
+        help
+            Chave da API do ipstack.
+
+    config OPENW_KEY
+        string "openweather key"
+        default "chave"
+        help
+            Chave da API do openweather.
+endmenu

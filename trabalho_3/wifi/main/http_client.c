@@ -4,12 +4,16 @@
 #include "esp_http_client.h"
 #include "esp_log.h"
 #include <string.h>
+#include <stdlib.h>
 #include "cJSON.h"
+
 #define TAG "HTTP"
 
 char chunked_response[500];
 char response[500];
 int chunked_res_len = 0;
+
+
 
 esp_err_t _http_event_handle(esp_http_client_event_t *evt)
 {
@@ -53,12 +57,14 @@ esp_err_t _http_event_handle(esp_http_client_event_t *evt)
     return ESP_OK;
 }
 
-void get_location(){
+void get_location(struct location* ips_loc){
     cJSON* country_code = NULL;
     cJSON* city = NULL;
     cJSON* region_code = NULL;
     cJSON* monitor_json = cJSON_Parse(chunked_response);
-        if (monitor_json == NULL)
+
+    printf("+++++++++++++ %s\n", chunked_response);
+    if (monitor_json == NULL)
     {
         const char *error_ptr = cJSON_GetErrorPtr();
         if (error_ptr != NULL)
@@ -68,21 +74,46 @@ void get_location(){
         return;
     }
     city = cJSON_GetObjectItemCaseSensitive(monitor_json, "city");
-    printf("json %s\n", city->valuestring);
+    if (cJSON_IsString(city) && (city->valuestring != NULL))
+    {
+        strcpy(ips_loc->city, city->valuestring);
+    }
+
+    country_code = cJSON_GetObjectItemCaseSensitive(monitor_json, "country_code");
+    if (cJSON_IsString(country_code) && (country_code->valuestring != NULL))
+    {
+        strcpy(ips_loc->country_code, country_code->valuestring);
+    }
+
+    region_code = cJSON_GetObjectItemCaseSensitive(monitor_json, "region_code");
+    if (cJSON_IsString(region_code) && (region_code->valuestring != NULL))
+    {
+        strcpy(ips_loc->region_code, region_code->valuestring);
+    }
 }
 
-char *get_openw_url()
+
+char* get_openw_url(struct location* ips_loc)
 {
     char *openw_url = (char *)malloc(300 * sizeof(char));
-    sprintf(openw_url, OPENW_URL, "Brasilia", "DF", "BR");
+    sprintf(openw_url, 
+            OPENW_URL, 
+            "Brasilia", 
+            ips_loc->region_code,
+            ips_loc->country_code);
+
     return openw_url;
 }
 
 void get_weather()
 {
+    struct location* ips_loc = malloc(sizeof(struct location));
+
     http_request(IPSTACK_URL);
-    http_request(get_openw_url());
-    get_location();
+    
+    get_location(ips_loc);
+
+    http_request(get_openw_url(ips_loc));
     printf("===============> %s\n", response);
 }
 
