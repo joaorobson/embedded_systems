@@ -14,15 +14,18 @@
 #define OPENW_HOST "http://api.openweathermap.org/data/2.5/weather?" 
 #define OPENW_URL OPENW_HOST OPENW_FIELDS OPENW_KEY
 
+#define LED 2
+
 struct location{
     char country_code[10];
     char city[50];
     char region_code[10];
 };
 
-
+char to_hex(char code);
+char *encode_str(char *str);
 char* get_ipstack_url();
-void get_weather();
+void get_weather_forecast();
 char* get_openw_url();
 void http_request();
 

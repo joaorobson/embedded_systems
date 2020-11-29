@@ -6,22 +6,30 @@
 #include <string.h>
 #include <stdlib.h>
 #include "cJSON.h"
+#include "driver/gpio.h"
 
 #define TAG "HTTP"
 
 char chunked_response[500];
 char response[500];
-int chunked_res_len = 0;
+
+int res_len = 0;
+void blink_LED(){
+
+    gpio_set_level(LED, 0);
+            vTaskDelay(1000 / portTICK_PERIOD_MS);
+    gpio_set_level(LED, 1);
+            vTaskDelay(1000 / portTICK_PERIOD_MS);
+    gpio_set_level(LED, 0);
+
+}
 
 
-/* Converts an integer value to its hex character*/
 char to_hex(char code) {
   static char hex[] = "0123456789abcdef";
   return hex[code & 15];
 }
 
-/* Returns a url-encoded version of str */
-/* IMPORTANT: be sure to free() the returned string after use */
 char *encode_str(char *str) {
   char *pstr = str, *buf = malloc(strlen(str) * 3 + 1), *pbuf = buf;
   while (*pstr) {
@@ -59,14 +67,13 @@ esp_err_t _http_event_handle(esp_http_client_event_t *evt)
         ESP_LOGI(TAG, "HTTP_EVENT_ON_DATA, len=%d", evt->data_len);
         if (!esp_http_client_is_chunked_response(evt->client))
         {
-            printf("%.*s", evt->data_len, (char *)evt->data);
-            strcpy(response, (char *)evt->data);
-            response[evt->data_len] = '\0';
+            strcat(response, (char *)evt->data);
+            res_len += evt->data_len;
+            response[res_len] = '\0';
         }
         else
         {
             strcat(chunked_response, (char *)evt->data);
-            chunked_res_len += evt->data_len;
         }
 
         break;
@@ -86,7 +93,6 @@ void get_location(struct location* ips_loc){
     cJSON* region_code = NULL;
     cJSON* monitor_json = cJSON_Parse(chunked_response);
 
-    printf("+++++++++++++ %s\n", chunked_response);
     if (monitor_json == NULL)
     {
         const char *error_ptr = cJSON_GetErrorPtr();
@@ -115,6 +121,30 @@ void get_location(struct location* ips_loc){
     }
 }
 
+void show_temperature(){
+
+    cJSON* monitor_json = cJSON_Parse(response);
+
+    if (monitor_json == NULL)
+    {
+        const char *error_ptr = cJSON_GetErrorPtr();
+        if (error_ptr != NULL)
+        {
+            fprintf(stderr, "Error before: %s\n", error_ptr);
+        }
+        return;
+    }
+    cJSON* info = cJSON_GetObjectItemCaseSensitive(monitor_json, "main");
+    cJSON* temp = cJSON_DetachItemFromObjectCaseSensitive(info, "temp");
+    cJSON* temp_min = cJSON_DetachItemFromObjectCaseSensitive(info, "temp_min");
+    cJSON* temp_max = cJSON_DetachItemFromObjectCaseSensitive(info, "temp_max");
+
+    printf("Temp. atual: %lf\nTemp. Mín.: %lf\nTemp. Máx: %lf\n", 
+           temp->valuedouble,
+           temp_min->valuedouble,
+           temp_max->valuedouble);
+}
+
 
 char* get_openw_url(struct location* ips_loc)
 {
@@ -128,16 +158,21 @@ char* get_openw_url(struct location* ips_loc)
     return openw_url;
 }
 
-void get_weather()
+void get_weather_forecast()
 {
     struct location* ips_loc = malloc(sizeof(struct location));
 
+    gpio_pad_select_gpio(LED);
+    gpio_set_direction(LED, GPIO_MODE_OUTPUT);
+
     http_request(IPSTACK_URL);
+    blink_LED();
     
     get_location(ips_loc);
 
     http_request(get_openw_url(ips_loc));
-    printf("===============> %s\n", response);
+    blink_LED();
+    show_temperature();
 }
 
 void http_request(char *req_url)

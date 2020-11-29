@@ -11,15 +11,16 @@
 
 xSemaphoreHandle conexaoWifiSemaphore;
 
-void RealizaHTTPRequest(void * params)
+void do_HTTPRequest(void * params)
 {
   while(true)
   {
     if(xSemaphoreTake(conexaoWifiSemaphore, portMAX_DELAY))
     {
       ESP_LOGI("Main Task", "Realiza HTTP Request");
-      get_weather();
-      //https_request();
+      get_weather_forecast();
+      xSemaphoreGive(conexaoWifiSemaphore);
+      vTaskDelay(3e4 / portTICK_PERIOD_MS);
     }
   }
 }
@@ -37,8 +38,6 @@ void app_main(void)
     conexaoWifiSemaphore = xSemaphoreCreateBinary();
     wifi_start();
 
-    xTaskCreate(&RealizaHTTPRequest, "Processa HTTP", 4096, NULL, 1, NULL);
-
-
+    xTaskCreate(&do_HTTPRequest, "Processa HTTP", 4096, NULL, 1, NULL);
     
 }
