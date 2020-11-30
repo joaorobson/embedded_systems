@@ -15,29 +15,21 @@ xSemaphoreHandle blink_led_semaphore;
 xSemaphoreHandle turn_led_on_semaphore;
 
 TaskHandle_t suspend_LED_loop;
-
+TaskHandle_t suspend_HTTPRequest = NULL;
 int led_status = 0;
 
 void do_HTTPRequest(void * params)
 {
   while(true)
   {
+
     if(xSemaphoreTake(wifi_connection_semaphore, portMAX_DELAY))
     {
-      eTaskState led_loop_state = eTaskGetState(suspend_LED_loop);
-      if(led_loop_state != eSuspended){
-        ESP_LOGI("Main Task", "Suspendendo LED piscando em loop"); 
-        vTaskSuspend(suspend_LED_loop);
-        xSemaphoreGive(turn_led_on_semaphore);
-      }
       ESP_LOGI("Main Task", "Realiza HTTP Request"); 
       get_weather_forecast();
-      vTaskDelay(3e5 / portTICK_PERIOD_MS);
+      vTaskDelay(10e3 / portTICK_PERIOD_MS);
 
       xSemaphoreGive(wifi_connection_semaphore);
-    }
-    else{
-      vTaskResume(suspend_LED_loop);
     }
   }
 }
@@ -85,11 +77,12 @@ void app_main(void)
     blink_led_semaphore = xSemaphoreCreateBinary();
    
     xTaskCreate(&LED_blink_loop, "Piscando LED sem parar...", 2048, NULL, 2, &suspend_LED_loop);
-   
+
     LED_start();
     wifi_start();
 
-    xTaskCreate(&do_HTTPRequest, "Processa HTTP", 4096, NULL, 2, NULL);
+    xTaskCreate(&do_HTTPRequest, "Processa HTTP", 4096, NULL, 2, &suspend_HTTPRequest);
+
     xTaskCreate(&do_LED_blink, "Piscar LED", 2048, NULL, 2, NULL);
     xTaskCreate(&turn_LED_on, "Ligar LED", 2048, NULL, 2, NULL);
 }
