@@ -27,7 +27,7 @@ void do_HTTPRequest(void * params)
     {
       ESP_LOGI("Main Task", "Realiza HTTP Request"); 
       get_weather_forecast();
-      vTaskDelay(10e3 / portTICK_PERIOD_MS);
+      vTaskDelay(3e5 / portTICK_PERIOD_MS);
 
       xSemaphoreGive(wifi_connection_semaphore);
     }
