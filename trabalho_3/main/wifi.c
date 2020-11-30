@@ -34,8 +34,6 @@ extern xSemaphoreHandle turn_led_on_semaphore;
 static void event_handler(void* arg, esp_event_base_t event_base,
                                 int32_t event_id, void* event_data)
 {
-        gpio_pad_select_gpio(LED);
-    gpio_set_direction(LED, GPIO_MODE_OUTPUT);
     //xSemaphoreGive(blink_led_semaphore);
 
     if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START) {
@@ -45,8 +43,6 @@ static void event_handler(void* arg, esp_event_base_t event_base,
             esp_wifi_connect();
             s_retry_num++;
             ESP_LOGI(TAG, "retry to connect to the AP");
-            //xSemaphoreGive(blink_led_semaphore);
-
         } else {
             xEventGroupSetBits(s_wifi_event_group, WIFI_FAIL_BIT);
         }
@@ -63,6 +59,7 @@ static void event_handler(void* arg, esp_event_base_t event_base,
 
 void wifi_start(){
 
+    //xSemaphoreGive(blink_led_semaphore);
 
     s_wifi_event_group = xEventGroupCreate();
 

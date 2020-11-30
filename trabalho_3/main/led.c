@@ -8,8 +8,8 @@ void LED_start(){
 
 void blink_LED(int led_status){
     gpio_set_level(LED, !led_status);
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
+    vTaskDelay(200 / portTICK_PERIOD_MS);
     gpio_set_level(LED, led_status);
-    vTaskDelay(1000 / portTICK_PERIOD_MS);
+    vTaskDelay(200 / portTICK_PERIOD_MS);
 
 }
