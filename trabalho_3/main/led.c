@@ -6,10 +6,10 @@ void LED_start(){
     gpio_set_direction(LED, GPIO_MODE_OUTPUT);
 }
 
-void blink_LED(){
-
-    gpio_set_level(LED, 0);
+void blink_LED(int led_status){
+    gpio_set_level(LED, !led_status);
     vTaskDelay(1000 / portTICK_PERIOD_MS);
-    gpio_set_level(LED, 1);
+    gpio_set_level(LED, led_status);
+    vTaskDelay(1000 / portTICK_PERIOD_MS);
 
 }

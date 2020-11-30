@@ -1,4 +1,5 @@
 #include "wifi.h"
+#include "led.h"
 
 #include <string.h>
 #include "freertos/FreeRTOS.h"
@@ -12,7 +13,7 @@
 
 #include "lwip/err.h"
 #include "lwip/sys.h"
-
+#include "driver/gpio.h"
 #define WIFI_SSID      CONFIG_ESP_WIFI_SSID
 #define WIFI_PASS      CONFIG_ESP_WIFI_PASSWORD
 #define WIFI_MAXIMUM_RETRY  CONFIG_ESP_MAXIMUM_RETRY
@@ -26,13 +27,15 @@ static EventGroupHandle_t s_wifi_event_group;
 
 static int s_retry_num = 0;
 extern xSemaphoreHandle wifi_connection_semaphore;
-//extern xSemaphoreHandle blink_led_semaphore;
-//extern xSemaphoreHandle turn_led_on_semaphore;
+extern xSemaphoreHandle blink_led_semaphore;
+extern xSemaphoreHandle turn_led_on_semaphore;
 
 
 static void event_handler(void* arg, esp_event_base_t event_base,
                                 int32_t event_id, void* event_data)
 {
+        gpio_pad_select_gpio(LED);
+    gpio_set_direction(LED, GPIO_MODE_OUTPUT);
     //xSemaphoreGive(blink_led_semaphore);
 
     if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START) {
@@ -42,6 +45,7 @@ static void event_handler(void* arg, esp_event_base_t event_base,
             esp_wifi_connect();
             s_retry_num++;
             ESP_LOGI(TAG, "retry to connect to the AP");
+            //xSemaphoreGive(blink_led_semaphore);
 
         } else {
             xEventGroupSetBits(s_wifi_event_group, WIFI_FAIL_BIT);

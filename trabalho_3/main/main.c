@@ -14,6 +14,8 @@ xSemaphoreHandle wifi_connection_semaphore;
 xSemaphoreHandle blink_led_semaphore;
 xSemaphoreHandle turn_led_on_semaphore;
 
+int led_status = 0;
+
 void do_HTTPRequest(void * params)
 {
   while(true)
@@ -33,7 +35,8 @@ void turn_LED_on(void* params){
   while(true){
     if(xSemaphoreTake(turn_led_on_semaphore, portMAX_DELAY)){
       ESP_LOGI("Secondary Task", "Liga LED"); 
-      gpio_set_level(LED, 1);
+      led_status = 1;
+      gpio_set_level(LED, led_status);
     }
   }
 }
@@ -41,7 +44,7 @@ void turn_LED_on(void* params){
 void do_LED_blink(void* params){
   while(true){
     if(xSemaphoreTake(blink_led_semaphore, portMAX_DELAY)){
-      blink_LED();
+      blink_LED(led_status);
     }
   }
 

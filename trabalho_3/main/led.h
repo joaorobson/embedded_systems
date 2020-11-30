@@ -6,7 +6,7 @@
 #define LED 2
 
 void LED_start();
-void blink_LED();
+void blink_LED(int led_status);
 
 
 

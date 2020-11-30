@@ -158,8 +158,8 @@ void get_weather_forecast()
 {
     struct location* ips_loc = malloc(sizeof(struct location));
 
-    gpio_pad_select_gpio(LED);
-    gpio_set_direction(LED, GPIO_MODE_OUTPUT);
+    // gpio_pad_select_gpio(LED);
+    // gpio_set_direction(LED, GPIO_MODE_OUTPUT);
 
     http_request(IPSTACK_URL);
     xSemaphoreGive(blink_led_semaphore);
@@ -169,6 +169,8 @@ void get_weather_forecast()
     get_location(ips_loc);
 
     http_request(get_openw_url(ips_loc));
+    xSemaphoreGive(blink_led_semaphore);
+
     //blink_LED();
     show_temperature();
 }
