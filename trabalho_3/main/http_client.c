@@ -1,4 +1,5 @@
 #include "http_client.h"
+#include "led.h"
 
 #include "esp_event.h"
 #include "esp_http_client.h"
@@ -14,15 +15,8 @@ char chunked_response[500];
 char response[500];
 
 int res_len = 0;
-void blink_LED(){
 
-    gpio_set_level(LED, 0);
-            vTaskDelay(1000 / portTICK_PERIOD_MS);
-    gpio_set_level(LED, 1);
-            vTaskDelay(1000 / portTICK_PERIOD_MS);
-    gpio_set_level(LED, 0);
-
-}
+extern xSemaphoreHandle blink_led_semaphore;
 
 
 char to_hex(char code) {
@@ -138,11 +132,13 @@ void show_temperature(){
     cJSON* temp = cJSON_DetachItemFromObjectCaseSensitive(info, "temp");
     cJSON* temp_min = cJSON_DetachItemFromObjectCaseSensitive(info, "temp_min");
     cJSON* temp_max = cJSON_DetachItemFromObjectCaseSensitive(info, "temp_max");
+    cJSON* hum = cJSON_DetachItemFromObjectCaseSensitive(info, "humidity");
 
-    printf("Temp. atual: %lf\nTemp. Mín.: %lf\nTemp. Máx: %lf\n", 
+    printf("Temp. atual: %.2lf\nTemp. Mín.: %.2lf\nTemp. Máx.: %.2lf\nHum.: %.2lf %%\n", 
            temp->valuedouble,
            temp_min->valuedouble,
-           temp_max->valuedouble);
+           temp_max->valuedouble,
+           hum->valuedouble);
 }
 
 
@@ -166,12 +162,14 @@ void get_weather_forecast()
     gpio_set_direction(LED, GPIO_MODE_OUTPUT);
 
     http_request(IPSTACK_URL);
-    blink_LED();
+    xSemaphoreGive(blink_led_semaphore);
+
+    //blink_LED();
     
     get_location(ips_loc);
 
     http_request(get_openw_url(ips_loc));
-    blink_LED();
+    //blink_LED();
     show_temperature();
 }
 

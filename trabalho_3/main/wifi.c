@@ -25,11 +25,16 @@
 static EventGroupHandle_t s_wifi_event_group;
 
 static int s_retry_num = 0;
-extern xSemaphoreHandle conexaoWifiSemaphore;
+extern xSemaphoreHandle wifi_connection_semaphore;
+//extern xSemaphoreHandle blink_led_semaphore;
+//extern xSemaphoreHandle turn_led_on_semaphore;
+
 
 static void event_handler(void* arg, esp_event_base_t event_base,
                                 int32_t event_id, void* event_data)
 {
+    //xSemaphoreGive(blink_led_semaphore);
+
     if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_START) {
         esp_wifi_connect();
     } else if (event_base == WIFI_EVENT && event_id == WIFI_EVENT_STA_DISCONNECTED) {
@@ -37,6 +42,7 @@ static void event_handler(void* arg, esp_event_base_t event_base,
             esp_wifi_connect();
             s_retry_num++;
             ESP_LOGI(TAG, "retry to connect to the AP");
+
         } else {
             xEventGroupSetBits(s_wifi_event_group, WIFI_FAIL_BIT);
         }
@@ -46,11 +52,13 @@ static void event_handler(void* arg, esp_event_base_t event_base,
         ESP_LOGI(TAG, "Endereço IP recebido:" IPSTR, IP2STR(&event->ip_info.ip));
         s_retry_num = 0;
         xEventGroupSetBits(s_wifi_event_group, WIFI_CONNECTED_BIT);
-        xSemaphoreGive(conexaoWifiSemaphore);
+        //xSemaphoreGive(turn_led_on_semaphore);
+        xSemaphoreGive(wifi_connection_semaphore);
     }
 }
 
 void wifi_start(){
+
 
     s_wifi_event_group = xEventGroupCreate();
 
