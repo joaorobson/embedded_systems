@@ -6,7 +6,7 @@ Primeiramente, configure as informações do WiFi e
 das chaves das API's executando ```idf.py menuconfig```.
 O seguinte menu será mostrado:
 
-![menu](https://github.com/joaorobson/embedded_systems/tree/master/trabalho_3/menu.png)
+![menu](https://raw.githubusercontent.com/joaorobson/embedded_systems/master/trabalho_3/menu.png)
 
 Para executar o código na placa, basta rodar os seguintes comandos padrão na raiz:
 
