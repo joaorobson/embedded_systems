@@ -3,10 +3,9 @@
 
 
 #define IPSTACK_KEY CONFIG_IPSTACK_KEY
-#define IP "177.235.87.78"
 #define IPSTACK_FIELDS "?fields=country_code,city,region_code&access_key="
-#define IPSTACK_HOST "http://api.ipstack.com/"
-#define IPSTACK_URL IPSTACK_HOST IP IPSTACK_FIELDS IPSTACK_KEY
+#define IPSTACK_HOST "http://api.ipstack.com/check"
+#define IPSTACK_URL IPSTACK_HOST IPSTACK_FIELDS IPSTACK_KEY
 
 #define OPENW_KEY CONFIG_OPENW_KEY
 
