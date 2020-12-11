@@ -31,6 +31,7 @@ void init_mqtt(void * params)
     {
       ESP_LOGI("Main Task", "Inicializa MQTT"); 
       mqtt_start();
+      publish_message(get_esp_init_topic(), "oi");
     }
   }
 }
@@ -83,7 +84,9 @@ void trataComunicacaoComServidor(void * params)
     while(true)
     {
       read_dht11(data);
-      mqtt_envia_mensagem("sensores/temperatura", mount_dht11_JSON(data));
+            publish_message(get_esp_init_topic(), "oi");
+
+      //publish_message("sensores/temperatura", mount_dht11_JSON(data));
       vTaskDelay(3000 / portTICK_PERIOD_MS);
     }
   }

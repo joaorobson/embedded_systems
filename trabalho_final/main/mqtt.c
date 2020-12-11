@@ -79,8 +79,9 @@ void mqtt_start()
     esp_mqtt_client_start(client);
 }
 
-void mqtt_envia_mensagem(char * topico, char * mensagem)
+void publish_message(char * topico, char * mensagem)
 {
+    printf("topico %s\n", topico);
     int message_id = esp_mqtt_client_publish(client, topico, mensagem, 0, 1, 0);
     ESP_LOGI(TAG, "Mesnagem enviada, ID: %d", message_id);
 }
