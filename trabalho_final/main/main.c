@@ -15,13 +15,14 @@
 #include "utils.h"
 #include "read_dht11.h"
 
-#define LED_1 2
-#define BOTAO_1 0
-
 xQueueHandle interruption_queue;
 
 xSemaphoreHandle wifi_connection_semaphore;
 xSemaphoreHandle mqtt_connection_semaphore;
+
+char room[50];
+
+
 
 void init_mqtt(void * params)
 {
@@ -36,13 +37,6 @@ void init_mqtt(void * params)
   }
 }
 
-
-
-static void IRAM_ATTR gpio_isr_handler(void *args)
-{
-  int pino = (int)args;
-  xQueueSendFromISR(interruption_queue, &pino, NULL);
-}
 
 void trataInterrupcaoBotao(void *params)
 {
@@ -84,9 +78,12 @@ void trataComunicacaoComServidor(void * params)
     while(true)
     {
       read_dht11(data);
-            publish_message(get_esp_init_topic(), "oi");
+      if(strcmp(room, "") != 0){
+        char topic[100];
+        sprintf(topic, "fse2020/150154003/%s/temperatura", room);
+        publish_message(topic, mount_dht11_JSON(data));
+      }
 
-      //publish_message("sensores/temperatura", mount_dht11_JSON(data));
       vTaskDelay(3000 / portTICK_PERIOD_MS);
     }
   }
@@ -104,33 +101,13 @@ void app_main()
     ESP_ERROR_CHECK(ret);
 
     wifi_connection_semaphore = xSemaphoreCreateBinary();
-        mqtt_connection_semaphore = xSemaphoreCreateBinary();
+    mqtt_connection_semaphore = xSemaphoreCreateBinary();
+    interruption_queue = xQueueCreate(10, sizeof(int));
 
-      // Configuração dos pinos dos LEDs 
-  gpio_pad_select_gpio(LED_1);   
-  // Configura os pinos dos LEDs como Output
-  gpio_set_direction(LED_1, GPIO_MODE_OUTPUT);  
-
-  // Configuração do pino do Botão
-  gpio_pad_select_gpio(BOTAO_1);
-  // Configura o pino do Botão como Entrada
-  gpio_set_direction(BOTAO_1, GPIO_MODE_INPUT);
-  // Configura o resistor de Pulldown para o botão (por padrão a entrada estará em Zero)
-  gpio_pulldown_en(BOTAO_1);
-  // Desabilita o resistor de Pull-up por segurança.
-  gpio_pullup_dis(BOTAO_1);
-
-  // Configura pino para interrupção
-  gpio_set_intr_type(BOTAO_1, GPIO_INTR_POSEDGE);
-
-  interruption_queue = xQueueCreate(10, sizeof(int));
-
-  gpio_install_isr_service(0);
-  gpio_isr_handler_add(BOTAO_1, gpio_isr_handler, (void *) BOTAO_1);
-    initialize_dht11();
+    init_button();
     wifi_start();
 
     xTaskCreate(&init_mqtt, "Inicializa MQTT", 2048, NULL, 2, NULL);
     xTaskCreate(&trataInterrupcaoBotao, "TrataBotao", 2048, NULL, 1, NULL);
-        xTaskCreate(&trataComunicacaoComServidor, "Comunicação com Broker", 4096, NULL, 1, NULL);
+    xTaskCreate(&trataComunicacaoComServidor, "Comunicação com Broker", 4096, NULL, 1, NULL);
 }

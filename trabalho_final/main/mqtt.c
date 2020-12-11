@@ -19,10 +19,13 @@
 #include "mqtt_client.h"
 
 #include "mqtt.h"
+#include "utils.h"
 
 #define TAG "MQTT"
 
 extern xSemaphoreHandle mqtt_connection_semaphore;
+extern char room[50];
+
 esp_mqtt_client_handle_t client;
 
 static esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event)
@@ -34,7 +37,7 @@ static esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event)
         case MQTT_EVENT_CONNECTED:
             ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED");
             xSemaphoreGive(mqtt_connection_semaphore);
-            msg_id = esp_mqtt_client_subscribe(client, "servidor/resposta", 0);
+            msg_id = esp_mqtt_client_subscribe(client, get_room_topic(), 0);
             break;
         case MQTT_EVENT_DISCONNECTED:
             ESP_LOGI(TAG, "MQTT_EVENT_DISCONNECTED");
@@ -53,6 +56,9 @@ static esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event)
             ESP_LOGI(TAG, "MQTT_EVENT_DATA");
             printf("TOPIC=%.*s\r\n", event->topic_len, event->topic);
             printf("DATA=%.*s\r\n", event->data_len, event->data);
+
+            strcpy(room, get_room_name(event->data));
+
             break;
         case MQTT_EVENT_ERROR:
             ESP_LOGI(TAG, "MQTT_EVENT_ERROR");
@@ -79,9 +85,9 @@ void mqtt_start()
     esp_mqtt_client_start(client);
 }
 
-void publish_message(char * topico, char * mensagem)
+void publish_message(char * topic, char * message)
 {
-    printf("topico %s\n", topico);
-    int message_id = esp_mqtt_client_publish(client, topico, mensagem, 0, 1, 0);
+    printf("topico %s\n", topic);
+    int message_id = esp_mqtt_client_publish(client, topic, message, 0, 1, 0);
     ESP_LOGI(TAG, "Mesnagem enviada, ID: %d", message_id);
 }
