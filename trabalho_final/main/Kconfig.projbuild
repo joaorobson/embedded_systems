@@ -18,3 +18,13 @@ menu "Configuração do Wifi Configuration"
         help
             Configure o valor máximo de tentativas de conexão.
 endmenu
+
+menu "Matrícula"
+
+    config MATRICULA
+        string "Número da matrícula"
+        default "150154003"
+        help
+            Digite sua matrícula
+
+endmenu
