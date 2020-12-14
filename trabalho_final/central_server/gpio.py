@@ -16,7 +16,7 @@ class InputOutputDevices:
     ]
 
     def __init__(self, state):
-        GPIO.setmode(GPIO.BOARD)
+        GPIO.setmode(GPIO.BCM)
         GPIO.setup([x[-1] for x in self.input_sensors], GPIO.IN)
         GPIO.setup([x[-1] for x in self.output_devices], GPIO.OUT, initial=GPIO.LOW)
         self.state = state.get('devices', {})

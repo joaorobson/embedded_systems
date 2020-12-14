@@ -22,7 +22,7 @@ def read_security_sensors(params, state):
     while not run_read_security_sensors:
         condition_read_security_sensors.wait()
         params.read_input_sensors_values()
-        print(state.devices)
+        print(state['devices'])
         run_read_security_sensors = False
     lock_read_security_sensors.release()
 
@@ -32,7 +32,7 @@ def read_bme280_sensor(params, state):
     while not run_bme280:
         condition_bme280.wait()
         params.read_data()
-        print(state.bme280)
+        print(state['bme280'])
         run_bme280 = False
     lock_bme280.release()
 
