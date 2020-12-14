@@ -4,30 +4,28 @@ import * as mqtt from 'mqtt';
 class HomePage extends Component {
   constructor(props){
     super(props);
-    this.client = mqtt.connect({
-      host: 'mqtt.eclipseprojects.io/mqtt',
-      port: 80
-    });
+    this.client = mqtt.connect('ws://mqtt.eclipseprojects.io/mqtt');
     this.client.on('connect', () => {
-      this.client.subscribe('renatobolado', (err) => {
+      this.client.subscribe('fse2020/150154003/central', (err) => {
       })
     })
     this.state = {
-      temperature: null
+      msg: {}
     };
   }
 
   componentDidMount(){
     this.client.on('message', (topic, message) => {
-      this.setState({ temperature: parseFloat(message.toString()) });
+      this.setState({ msg: JSON.parse(message.toString())['bme280'] });
     })
   }
 
   render() {
-    const { temperature } = this.state;
+    const { msg } = this.state;
     return (
       <div style={{ display: 'flex', flexDirection: 'column' }}>
-        <h2>Temperatura: {temperature}</h2>
+        <h2>Temperatura: {msg['temperature']}</h2>
+        <h2>Umidade: {msg['humidity']}</h2>
       </div>
     );
   }
