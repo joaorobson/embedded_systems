@@ -1,5 +1,6 @@
 import signal
 from threading import Thread, Condition, Lock
+from bme280_sensor import BME280
 
 run_bme280 = False
 lock_bme280 = Lock()
@@ -19,7 +20,8 @@ def read_security_sensors(params):
     global run_read_security_sensors
     while not run_read_security_sensors:
         condition_read_security_sensors.wait()
-        print("READ SECURITY SENSOR")
+        temperature, humidity = params.read_data()
+        print(f"Temperature: {temperature} | Humidity: {humidity}")
         run_read_security_sensors = False
     lock_read_security_sensors.release()
 
@@ -43,6 +45,7 @@ def alarm_handler(signum, frame):
         condition_read_security_sensors.notify()
     lock_read_security_sensors.release()
 
+    # reads bme280 every 1 second
     if number_of_executions == 5:
         lock_bme280.acquire()
         global run_bme280
@@ -56,8 +59,10 @@ if __name__ == '__main__':
     signal.signal(signal.SIGALRM, alarm_handler)
     signal.setitimer(signal.ITIMER_REAL, 0.2, 0.2)
 
+    sensor_bme280 = BME280()
+
     check_security_sensors = Thread(target=read_security_sensors, args=('security sensor',))
-    read_temperature_humidity = Thread(target=read_bme280_sensor, args=('bme280 sensor',))
+    read_temperature_humidity = Thread(target=read_bme280_sensor, args=(sensor_bme280,))
 
     check_security_sensors.start()
     read_temperature_humidity.start()
