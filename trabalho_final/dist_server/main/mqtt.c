@@ -20,6 +20,7 @@
 
 #include "mqtt.h"
 #include "utils.h"
+#include "storage.h"
 
 #define TAG "MQTT"
 
@@ -37,7 +38,7 @@ static esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event)
         case MQTT_EVENT_CONNECTED:
             ESP_LOGI(TAG, "MQTT_EVENT_CONNECTED");
             xSemaphoreGive(mqtt_connection_semaphore);
-            msg_id = esp_mqtt_client_subscribe(client, get_room_topic(), 0);
+            msg_id = esp_mqtt_client_subscribe(client, get_esp_init_topic(), 0);
             break;
         case MQTT_EVENT_DISCONNECTED:
             ESP_LOGI(TAG, "MQTT_EVENT_DISCONNECTED");
@@ -57,7 +58,8 @@ static esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event)
             printf("TOPIC=%.*s\r\n", event->topic_len, event->topic);
             printf("DATA=%.*s\r\n", event->data_len, event->data);
 
-            strcpy(room, get_room_name(event->data));
+            printf("json %s\n", event->data);
+            strcpy(room, process_data(event->data));
 
             break;
         case MQTT_EVENT_ERROR:
@@ -87,7 +89,6 @@ void mqtt_start()
 
 void publish_message(char * topic, char * message)
 {
-    printf("topico %s\n", topic);
     int message_id = esp_mqtt_client_publish(client, topic, message, 0, 1, 0);
     ESP_LOGI(TAG, "Mesnagem enviada, ID: %d", message_id);
 }

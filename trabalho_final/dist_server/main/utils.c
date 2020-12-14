@@ -10,14 +10,32 @@
 #include "esp_log.h"
 #include "driver/gpio.h"
 
+#include "storage.h"
+
 #define LED_1 2
 #define BOTAO_1 0
 
 extern xQueueHandle interruption_queue;
 
+char* get_room_name(cJSON* json){
 
-char* get_room_name(char* json_str){
     const cJSON* room_name = NULL;
+
+    room_name = cJSON_GetObjectItemCaseSensitive(json, "room");
+
+    if (cJSON_IsString(room_name) && (room_name->valuestring != NULL))
+    {
+        // Chave "room" existe no JSON
+        write_on_nvs("room_name", room_name->valuestring);
+        return room_name->valuestring;
+    }
+    return "";
+}
+
+
+char* process_data(char* json_str){
+
+    char* data = (char*)malloc(100*sizeof(char));
 
     cJSON* json = cJSON_Parse(json_str);
     if (json == NULL)
@@ -29,15 +47,13 @@ char* get_room_name(char* json_str){
         }
     }
 
-    room_name = cJSON_GetObjectItemCaseSensitive(json, "room");
-    if (cJSON_IsString(room_name) && (room_name->valuestring != NULL))
-    {
-        return room_name->valuestring;
-    }
+    strcpy(data, get_room_name(json));
 
-    return "";
+    // Tratar outros casos
+    return data;
+}   
 
-}
+
 
 char* mount_dht11_JSON(struct dht11_data* data){
 

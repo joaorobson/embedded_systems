@@ -14,6 +14,7 @@
 #include "mqtt.h"
 #include "utils.h"
 #include "read_dht11.h"
+#include "storage.h"
 
 xQueueHandle interruption_queue;
 
@@ -32,7 +33,13 @@ void init_mqtt(void * params)
     {
       ESP_LOGI("Main Task", "Inicializa MQTT"); 
       mqtt_start();
-      publish_message(get_esp_init_topic(), "oi");
+      
+      char is_registered[10];
+      strcpy(is_registered, read_nvs("is_registered"));
+      if(strcmp(is_registered, "s") != 0){
+        publish_message(get_esp_init_topic(), "{}");
+        write_on_nvs("is_registered", "s");
+      }
     }
   }
 }
