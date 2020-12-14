@@ -20,8 +20,7 @@ def read_security_sensors(params):
     global run_read_security_sensors
     while not run_read_security_sensors:
         condition_read_security_sensors.wait()
-        temperature, humidity = params.read_data()
-        print(f"Temperature: {temperature} | Humidity: {humidity}")
+        print("READ SECURITY SENSOR")
         run_read_security_sensors = False
     lock_read_security_sensors.release()
 
@@ -30,7 +29,8 @@ def read_bme280_sensor(params):
     global run_bme280
     while not run_bme280:
         condition_bme280.wait()
-        print("READ BME280 SENSOR")
+        temperature, humidity = params.read_data()
+        print(f"Temperature: {temperature} | Humidity: {humidity}")
         run_bme280 = False
     lock_bme280.release()
 
