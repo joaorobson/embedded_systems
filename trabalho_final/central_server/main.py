@@ -4,6 +4,7 @@ from threading import Thread, Condition, Lock
 from bme280_sensor import BME280
 from gpio import InputOutputDevices
 from emitter import Emitter
+from constants import CENTRAL_TOPIC
 
 run_bme280 = False
 lock_bme280 = Lock()
@@ -43,7 +44,7 @@ def send_data(emitter, state):
     global run_send_data
     while not run_send_data:
         condition_send_data.wait()
-        emitter.send_data("fse/150154003/central", json.dumps(state))
+        emitter.send_data(CENTRAL_TOPIC, json.dumps(state))
         run_send_data = False
     lock_send_data.release()
 

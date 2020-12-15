@@ -1,4 +1,5 @@
 import RPi.GPIO as GPIO
+from constants import CENTRAL_TOPIC
 
 class InputOutputDevices:
 
@@ -42,7 +43,7 @@ class InputOutputDevices:
         activate_alarm = any([self.devices_state[x] for x in self.input_sensors])
         if activate_alarm and self.last_activate_alarm != activate_alarm:
             self.full_state['alarm'] = activate_alarm
-            self.emitter.send_data("fse/150154003/central", json.dumps(self.full_state))
+            self.emitter.send_data(CENTRAL_TOPIC, json.dumps(self.full_state))
             self.last_activate_alarm = activate_alarm
         elif not activate_alarm and self.last_activate_alarm != activate_alarm:
             self.full_state['alarm'] = activate_alarm
