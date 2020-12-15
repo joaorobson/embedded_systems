@@ -19,32 +19,31 @@ condition_read_security_sensors = Condition(lock_read_security_sensors)
 
 number_of_executions = 0
 
-def read_security_sensors(params, state):
+def read_security_sensors(devices, state):
     lock_read_security_sensors.acquire()
     global run_read_security_sensors
     while not run_read_security_sensors:
         condition_read_security_sensors.wait()
-        params.read_input_sensors_values()
-        print(state['devices'])
+        devices.read_input_sensors_values()
+        state['alarm'] = devices.check_activate_alarm()
         run_read_security_sensors = False
     lock_read_security_sensors.release()
 
-def read_bme280_sensor(params, state):
+def read_bme280_sensor(sensor_bme280, state):
     lock_bme280.acquire()
     global run_bme280
     while not run_bme280:
         condition_bme280.wait()
-        params.read_data()
-        print(state['bme280'])
+        sensor_bme280.read_data()
         run_bme280 = False
     lock_bme280.release()
 
-def send_data(params, state):
+def send_data(emitter, state):
     lock_send_data.acquire()
     global run_send_data
     while not run_send_data:
         condition_send_data.wait()
-        params.send_data("fse/150154003/central", json.dumps(state))
+        emitter.send_data("fse/150154003/central", json.dumps(state))
         run_send_data = False
     lock_send_data.release()
 
@@ -80,10 +79,10 @@ if __name__ == '__main__':
     signal.signal(signal.SIGALRM, alarm_handler)
     signal.setitimer(signal.ITIMER_REAL, 0.2, 0.2)
 
-    state = {'bme280': {}, 'devices': {}}
-    sensor_bme280 = BME280(state)
-    devices = InputOutputDevices(state)
+    state = {'bme280': {}, 'devices': {}, 'alarm': 0}
     emitter = Emitter()
+    sensor_bme280 = BME280(state)
+    devices = InputOutputDevices(state, emitter)
 
     check_security_sensors = Thread(target=read_security_sensors, args=(devices, state,))
     read_temperature_humidity = Thread(target=read_bme280_sensor, args=(sensor_bme280, state,))
