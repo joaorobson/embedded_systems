@@ -6,8 +6,20 @@ void initialize_dht11(){
 }
 
 void read_dht11(struct dht11_data* data){
-    data->temp = DHT11_read().temperature;
-    data->hum = DHT11_read().humidity;
+
+    double temp, hum;
+
+    temp = DHT11_read().temperature;
+    hum = DHT11_read().humidity;
+
+    if(temp != -1){
+        data->temp = temp;
+    }
+    
+    if(hum != -1){
+        data->hum = hum;
+    }
+    
 
     printf("Temperature is %lf \n", data->temp);
     printf("Humidity is %lf\n", data->hum);

@@ -55,22 +55,26 @@ char* process_data(char* json_str){
 
 
 
-char* mount_dht11_JSON(struct dht11_data* data){
+char* mount_JSON(char* key, struct dht11_data* data){
 
     char* json = NULL;
-    cJSON* temp = NULL;
-    cJSON* hum = NULL;
+    cJSON* value = NULL;
 
     cJSON* monitor = cJSON_CreateObject();
 
-    temp = cJSON_CreateNumber(data->temp);
-
-    cJSON_AddItemToObject(monitor, "temperature", temp);
-
-    hum = cJSON_CreateNumber(data->hum);
-
-    cJSON_AddItemToObject(monitor, "humidity", hum);
-
+    if(strcmp(key, "temperature") == 0){
+        value = cJSON_CreateNumber(data->temp);
+    }
+    else if(strcmp(key, "humidity") == 0){
+        value = cJSON_CreateNumber(data->hum);
+    }
+    else if(strcmp(key, "state") == 0){
+        value = cJSON_CreateNumber(data->state);
+    }
+    else{
+        return "{}";
+    }
+    cJSON_AddItemToObject(monitor, key, value);
     json = cJSON_PrintUnformatted(monitor);
 
     return json;

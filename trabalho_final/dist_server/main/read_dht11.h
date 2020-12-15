@@ -4,6 +4,7 @@
 struct dht11_data {
     double temp;
     double hum;
+    int state;
 };
 
 
