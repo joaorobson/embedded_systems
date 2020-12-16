@@ -27,8 +27,8 @@ class DistributedServerList extends Component {
       distributedServer['topicName'] = '';
       distributedServer['inputDeviceName'] = '';
       distributedServer['outputDeviceName'] = '';
-      distributedServerActions.addDistributedServer([distributedServer]);
-    })
+      distributedServerActions.addDistributedServer(distributedServer);
+    });
   }
 
   render(){
@@ -44,7 +44,7 @@ class DistributedServerList extends Component {
             justifyItems: "center",
             gridGap: "10px",
             padding: "0px 16px",
-            gridTemplateColumns: "repeat( auto-fill, minmax(250px, 1fr) )",
+            gridTemplateColumns: "repeat( auto-fill, minmax(350px, 1fr) )",
           }}
         >
           {distributedServers.map((server, index) => {

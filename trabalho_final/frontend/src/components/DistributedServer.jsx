@@ -19,13 +19,26 @@ class DistributedServer extends Component {
     this.state = {
       temperature: '',
       humidity: '',
-      state: ''
+      stateInput: false,
+      stateOutput: 0
     }
   }
 
   handleChange = (event) => {
     this.setState({ [event.target.name]: event.target.value });
   }
+
+  handleSelect = (event) => {
+    const { server } = this.props;
+    const { stateOutput } = this.state;
+    this.client.publish(
+      `fse2020/150154003/dispositivos/${server.macAddress}`,
+      JSON.stringify({ led: 1 - stateOutput }),
+      (err) => {
+        this.setState({ stateOutput: 1 - stateOutput });
+      }
+    );
+  };
 
   onSubmit = () => {
     const { server } = this.props;
@@ -45,7 +58,7 @@ class DistributedServer extends Component {
               } else if(msg.hasOwnProperty('humidity')){
                 this.setState({ humidity: msg.humidity });
               } else if(msg.hasOwnProperty('state')){
-                this.setState({ state: msg.state });
+                this.setState({ stateInput: Boolean(msg.state) });
               }
             });
           }
@@ -55,8 +68,8 @@ class DistributedServer extends Component {
   }
 
   render(){
-    const { temperature, humidity, state } = this.state;
     const { server, handleOpen, handleClose } = this.props;
+    const { temperature, humidity, stateInput, stateOutput } = this.state;
     return(
       <Card>
         <CardHeader
@@ -93,9 +106,21 @@ class DistributedServer extends Component {
               <Grid item>Off</Grid>
               <Grid item>
                 <Switch
-                  checked={state}
-                  name={server.inputDeviceName}
+                  checked={stateInput}
                   disabled={true}
+                  name={server.inputDeviceName}
+                />
+              </Grid>
+              <Grid item>On</Grid>
+            </Grid>
+            <Grid component="label" container alignItems="center" spacing={1}>
+              <span>{server.outputDeviceName}</span>
+              <Grid item>Off</Grid>
+              <Grid item>
+                <Switch
+                  checked={stateOutput}
+                  onChange={this.handleSelect}
+                  name={server.outputDeviceName}
                 />
               </Grid>
               <Grid item>On</Grid>

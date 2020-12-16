@@ -5,10 +5,16 @@ const initialState = {
 const distributedServersReducer = (state = initialState, action) => {
   switch (action.type) {
     case 'ADD_DISTRIBUTED_SERVER':
-      return {
-        ...state,
-        distributedServers: [...state.distributedServers, ...action.data]
-      };
+      const alreadyRegistered = Boolean(state.distributedServers.find(server => server['macAddress'] === action.data.macAddress));
+      console.log("ASDF", action.data, alreadyRegistered);
+      if(alreadyRegistered){
+        return state;
+      } else {
+        return {
+          ...state,
+          distributedServers: [...state.distributedServers, ...[action.data]]
+        };
+      }
 
     case 'CHANGE_DISTRIBUTED_SERVER_INFO':
       const macAddress = action.data['macAddress'];
