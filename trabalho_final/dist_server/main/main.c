@@ -37,7 +37,7 @@ void init_mqtt(void * params)
       strcpy(is_registered, read_nvs("is_registered"));
 
       if(strcmp(is_registered, "s") != 0){
-        publish_message(get_esp_init_topic(), "{}");
+        publish_message(get_esp_init_topic(), mount_MAC_JSON());
         write_on_nvs("is_registered", "s");
       }
       else{
@@ -75,7 +75,7 @@ void handle_button_interruption(void *params)
         char* topic = (char*)malloc(100*sizeof(char));
 
         topic = get_room_topic(room, "estado");
-        publish_message(topic, mount_JSON("state", data));
+        publish_message(topic, mount_dht11_JSON("state", data));
 
         // Habilitar novamente a interrupção
         vTaskDelay(50 / portTICK_PERIOD_MS);
@@ -99,13 +99,13 @@ void handle_mqtt_messages(void * params)
         char* topic = (char*)malloc(100*sizeof(char));
         
         topic = get_room_topic(room, "temperatura");
-        publish_message(topic, mount_JSON("temperature", data));
+        publish_message(topic, mount_dht11_JSON("temperature", data));
 
         topic = get_room_topic(room, "umidade");
-        publish_message(topic, mount_JSON("humidity", data));
+        publish_message(topic, mount_dht11_JSON("humidity", data));
 
         topic = get_room_topic(room, "estado");
-        publish_message(topic, mount_JSON("state", data));
+        publish_message(topic, mount_dht11_JSON("state", data));
 
       }
 
@@ -117,8 +117,10 @@ void handle_mqtt_messages(void * params)
 
 void app_main()
 {
+
     // Inicializa o NVS
     esp_err_t ret = nvs_flash_init();
+
     if (ret == ESP_ERR_NVS_NO_FREE_PAGES || ret == ESP_ERR_NVS_NEW_VERSION_FOUND) {
       ESP_ERROR_CHECK(nvs_flash_erase());
       ret = nvs_flash_init();

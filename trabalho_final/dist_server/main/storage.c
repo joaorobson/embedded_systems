@@ -25,6 +25,7 @@ char* read_nvs(char* key)
     if(res_nvs == ESP_ERR_NVS_NOT_FOUND)
     {
         ESP_LOGE("NVS", "Namespace: storage, não encontrado");
+        return "-1";
     }
     else
     {

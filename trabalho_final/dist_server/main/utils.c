@@ -92,8 +92,37 @@ void process_data(char* json_str){
 }   
 
 
+char* mount_MAC_JSON(){
 
-char* mount_JSON(char* key, struct dht11_data* data){
+    char* json = (char*) malloc(sizeof(char)*100);
+    char* mac_str = (char*) malloc(sizeof(char)*20);
+    uint8_t mac_addr[6] = {0};
+
+    esp_efuse_mac_get_default(mac_addr);
+    sprintf(mac_str, 
+            "%x:%x:%x:%x:%x:%x", 
+            mac_addr[0],
+            mac_addr[1],
+            mac_addr[2],
+            mac_addr[3],
+            mac_addr[4],
+            mac_addr[5]);
+
+    cJSON* value = NULL;
+
+    cJSON* monitor = cJSON_CreateObject();
+
+    value = cJSON_CreateString(mac_str);
+    
+    cJSON_AddItemToObject(monitor, "mac", value);
+    json = cJSON_PrintUnformatted(monitor);
+
+
+    return json; 
+}
+
+
+char* mount_dht11_JSON(char* key, struct dht11_data* data){
 
     char* json = NULL;
     cJSON* value = NULL;

@@ -87,5 +87,5 @@ void mqtt_start()
 void publish_message(char * topic, char * message)
 {
     int message_id = esp_mqtt_client_publish(client, topic, message, 0, 1, 0);
-    ESP_LOGI(TAG, "Mesnagem enviada, ID: %d", message_id);
+    ESP_LOGI(TAG, "Mensagem enviada, ID: %d", message_id);
 }
