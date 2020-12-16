@@ -1,6 +1,15 @@
-import React, { Component } from "react";
-import * as mqtt from "mqtt";
+import React, { Component } from 'react';
+import Slide from '@material-ui/core/Slide';
+import Dialog from '@material-ui/core/Dialog';
+import DialogTitle from '@material-ui/core/DialogTitle';
+import DialogContent from '@material-ui/core/DialogContent';
+import DistributedServerList from '../components/DistributedServerList';
 import CustomizedSwitches from "./RaspSensors";
+import * as mqtt from 'mqtt';
+
+const Transition = React.forwardRef(function Transition(props, ref) {
+  return <Slide direction="up" ref={ref} {...props} />;
+});
 
 class HomePage extends Component {
   constructor(props) {
@@ -11,6 +20,9 @@ class HomePage extends Component {
     });
     this.state = {
       msg: {},
+      modalTitle: '',
+      component: null,
+      isModalOpen: false,
     };
   }
 
@@ -20,8 +32,24 @@ class HomePage extends Component {
     });
   }
 
+  handleOpen = (component=undefined, modalTitle='') => {
+    this.setState({
+      isModalOpen: true,
+      component: component,
+      modalTitle: modalTitle,
+    });
+  }
+
+  handleClose = () => {
+    this.setState({
+      isModalOpen: false,
+      component: undefined,
+      modalTitle: ''
+    });
+  }
+
   render() {
-    const { msg } = this.state;
+    const { bme280, isModalOpen, component, modalTitle } = this.state;
     return (
       <div style={{ display: "flex", flexDirection: "column" }}>
         <div style={{ display: "flex", justifyContent: "center" }}>
@@ -39,6 +67,17 @@ class HomePage extends Component {
           <h2>Umidade: {msg["humidity"]}</h2>
         </div>
         <CustomizedSwitches client={this.client} />
+        <DistributedServerList handleOpen={this.handleOpen} handleClose={this.handleClose} />
+        <Dialog
+          open={isModalOpen}
+          onClose={this.handleClose}
+          TransitionComponent={Transition}
+        >
+          <DialogTitle id="form-dialog-title">{modalTitle}</DialogTitle>
+          <DialogContent>
+            {component}
+          </DialogContent>
+        </Dialog>
       </div>
     );
   }
