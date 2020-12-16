@@ -57,9 +57,7 @@ static esp_err_t mqtt_event_handler_cb(esp_mqtt_event_handle_t event)
             printf("DATA=%.*s\r\n", event->data_len, event->data);
             
             process_data(event->data);
-            if(strlen(room) > 0){
-                esp_mqtt_client_subscribe(client, get_room_topic(room, "led"), 0);
-            }
+
             break;
         case MQTT_EVENT_ERROR:
             ESP_LOGI(TAG, "MQTT_EVENT_ERROR");
