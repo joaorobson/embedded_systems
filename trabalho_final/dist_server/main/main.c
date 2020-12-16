@@ -15,6 +15,7 @@
 #include "utils.h"
 #include "read_dht11.h"
 #include "storage.h"
+#include "led.h"
 
 xQueueHandle interruption_queue;
 
@@ -70,7 +71,8 @@ void handle_button_interruption(void *params)
         printf("Estado atual: %d\n", device_state);
 
         char* topic = (char*)malloc(100*sizeof(char));
-        sprintf(topic, "fse2020/150154003/%s/estado", room);
+
+        topic = get_room_topic(room, "estado");
         publish_message(topic, mount_JSON("state", data));
 
         // Habilitar novamente a interrupção
@@ -93,13 +95,14 @@ void handle_mqtt_messages(void * params)
       read_dht11(data);
       if(strcmp(room, "") != 0){
         char* topic = (char*)malloc(100*sizeof(char));
-        sprintf(topic, "fse2020/150154003/%s/temperatura", room);
-        publish_message(topic, mount_JSON("temperature", data));
         
-        sprintf(topic, "fse2020/150154003/%s/umidade", room);
+        topic = get_room_topic(room, "temperatura");
+        publish_message(topic, mount_JSON("temperature", data));
+
+        topic = get_room_topic(room, "umidade");
         publish_message(topic, mount_JSON("humidity", data));
 
-        sprintf(topic, "fse2020/150154003/%s/estado", room);
+        topic = get_room_topic(room, "estado");
         publish_message(topic, mount_JSON("state", data));
 
       }
@@ -126,10 +129,11 @@ void app_main()
 
     init_button();
     wifi_start();
+    LED_start();
     
     struct dht11_data* data = malloc(sizeof(struct dht11_data));
     data->state = 0;
-    
+
     xTaskCreate(&init_mqtt, "Inicializa MQTT", 2048, NULL, 2, NULL);
     xTaskCreate(&handle_button_interruption, "TrataBotao", 2048, (void*) data, 1, NULL);
     xTaskCreate(&handle_mqtt_messages, "Comunicação com Broker", 4096, (void*) data, 1, NULL);

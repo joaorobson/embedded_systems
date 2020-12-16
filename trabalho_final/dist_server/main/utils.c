@@ -11,11 +11,36 @@
 #include "driver/gpio.h"
 
 #include "storage.h"
+#include "led.h"
 
-#define LED_1 2
 #define BOTAO_1 0
 
 extern xQueueHandle interruption_queue;
+extern char room[50];
+
+int get_LED_state(cJSON* json){
+    const cJSON* led_state = NULL;
+
+    led_state = cJSON_GetObjectItemCaseSensitive(json, "led");
+
+    if (cJSON_IsNumber(led_state) && (led_state->valueint != NULL))
+    {
+        return led_state->valueint;
+    }
+    return 0;
+}
+
+
+int check_key(cJSON* json, char* key){
+    const cJSON* value = NULL;
+
+    value = cJSON_GetObjectItemCaseSensitive(json, key);
+
+    if(value){
+        return 1;
+    }
+    return 0;
+}
 
 char* get_room_name(cJSON* json){
 
@@ -33,9 +58,7 @@ char* get_room_name(cJSON* json){
 }
 
 
-char* process_data(char* json_str){
-
-    char* data = (char*)malloc(100*sizeof(char));
+void process_data(char* json_str){
 
     cJSON* json = cJSON_Parse(json_str);
     if (json == NULL)
@@ -47,10 +70,14 @@ char* process_data(char* json_str){
         }
     }
 
-    strcpy(data, get_room_name(json));
 
-    // Tratar outros casos
-    return data;
+    if(check_key(json, "room")){
+        strcpy(room, get_room_name(json));
+    }
+
+    else if(check_key(json, "led")){
+        handle_LED_state(get_LED_state(json));
+    }
 }   
 
 
@@ -99,9 +126,13 @@ char* get_esp_init_topic(){
     return topic;
 }
 
-char* get_room_topic(){
+char* get_room_topic(char* room_name, char* topic_info){
     char* topic = (char*) malloc(sizeof(char)*100);
-    sprintf(topic, "fse2020/%s/+", CONFIG_MATRICULA);
+    sprintf(topic, 
+            "fse2020/%s/%s/%s", 
+            CONFIG_MATRICULA,
+            room_name,
+            topic_info);
 
     return topic;
 }
@@ -113,11 +144,7 @@ void IRAM_ATTR gpio_isr_handler(void *args)
 }
 
 void init_button(){
-    // Configuração dos pinos dos LEDs 
-    gpio_pad_select_gpio(LED_1);   
-    // Configura os pinos dos LEDs como Output
-    gpio_set_direction(LED_1, GPIO_MODE_OUTPUT);  
-
+ 
     // Configuração do pino do Botão
     gpio_pad_select_gpio(BOTAO_1);
     // Configura o pino do Botão como Entrada
