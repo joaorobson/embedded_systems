@@ -1,67 +1,90 @@
 import React, { Component } from 'react';
 import { ButtonGroup, Button, FormGroup, FormControl, TextField } from '@material-ui/core';
+import { connect } from 'react-redux';
+import { bindActionCreators } from 'redux';
+import * as DistributedServersAction from './DistributedServersAction';
+import * as mqtt from 'mqtt';
 
 class FormAddRoom extends Component {
-  onSubmit = (event) => {
+  constructor(props){
+    super(props);
+    this.client = mqtt.connect('ws://mqtt.eclipseprojects.io/mqtt');
+  }
+
+  handleChange = (event) => {
+    const { distributedServerActions, server } = this.props;
+    distributedServerActions.changeDistributedServerInfo({
+      key: event.target.name,
+      value: event.target.value,
+      macAddress: server.macAddress,
+    });
   }
 
   render() {
-    const {
-      handleClose,
-      room_name,
-      topic_name,
-      input_device_name,
-      output_device_name,
-      handleChange
-    } = this.props;
-
+    const { server, handleClose, onSubmit } = this.props;
     return (
       <div>
         <FormGroup style={{ minWidth: '300px' }}>
           <FormControl style={{ margin: '6px 0px' }}>
             <TextField
               label="Cômodo"
-              name="room_name"
+              name="roomName"
               variant="outlined"
-              value={room_name}
-              onChange={handleChange}
+              value={server.roomName}
+              onChange={this.handleChange}
             />
           </FormControl>
           <FormControl style={{ margin: '6px 0px' }}>
             <TextField
               label="Tópico"
-              name="topic_name"
+              name="topicName"
               variant="outlined"
-              value={topic_name}
-              onChange={handleChange}
+              value={server.topicName}
+              onChange={this.handleChange}
             />
           </FormControl>
           <FormControl style={{ margin: '6px 0px' }}>
             <TextField
               label="Dispositivo de Entrada"
               variant="outlined"
-              name="input_device_name"
-              value={input_device_name}
-              onChange={handleChange}
+              name="inputDeviceName"
+              value={server.inputDeviceName}
+              onChange={this.handleChange}
             />
           </FormControl>
           <FormControl style={{ margin: '6px 0px' }}>
             <TextField
               label="Dispositivo de Saída"
               variant="outlined"
-              name="output_device_name"
-              value={output_device_name}
-              onChange={handleChange}
+              name="outputDeviceName"
+              value={server.outputDeviceName}
+              onChange={this.handleChange}
             />
           </FormControl>
           <ButtonGroup style={{ justifyContent: 'center', margin: '6px 0px' }}>
             <Button variant="outlined" onClick={(e) => { handleClose() }}>Fechar</Button>
-            <Button variant="contained" color="primary" onClick={() => {}}>Cadastrar</Button>
+            <Button variant="contained" color="primary" onClick={onSubmit}>Cadastrar</Button>
           </ButtonGroup>
         </FormGroup>
       </div>
     );
   }
 }
+
+function mapDispatchToProps (dispatch) {
+  return {
+    distributedServerActions: bindActionCreators(DistributedServersAction, dispatch)
+  }
+}
+
+const mapStateToProps = (state, props) => {
+  const { distributedServersReducer, clientReducer } = state.Reducers;
+  const objIndex = distributedServersReducer.distributedServers.findIndex((obj => obj.macAddress == props.macAddress));
+  return({
+    server: distributedServersReducer.distributedServers[objIndex]
+  });
+};
+
+FormAddRoom = connect(mapStateToProps, mapDispatchToProps)(FormAddRoom)
 
 export default FormAddRoom;

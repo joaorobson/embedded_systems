@@ -1,5 +1,8 @@
 import React, { Component } from 'react';
 import DistributedServer from './DistributedServer';
+import { connect } from 'react-redux';
+import { bindActionCreators } from 'redux';
+import * as DistributedServersAction from './DistributedServersAction';
 import * as mqtt from 'mqtt';
 
 class DistributedServerList extends Component {
@@ -17,28 +20,57 @@ class DistributedServerList extends Component {
   componentDidMount(){
     this.client.on('message', (topic, message) => {
       let distributedServer = {};
-      const macAddress = topic.split("/");
-      distributedServer['macAddress'] = macAddress[macAddress.length - 1];
-      this.setState(prevState => ({
-        distributedServers: [...prevState.distributedServers, distributedServer]
-      }))
+      const topicInfo = topic.split("/");
+      const { distributedServerActions } = this.props;
+      distributedServer['macAddress'] = topicInfo[topicInfo.length - 1];
+      distributedServer['roomName'] = '';
+      distributedServer['topicName'] = '';
+      distributedServer['inputDeviceName'] = '';
+      distributedServer['outputDeviceName'] = '';
+      distributedServerActions.addDistributedServer([distributedServer]);
     })
   }
 
   render(){
-    const { distributedServers } = this.state;
-    const { handleOpen, handleClose } = this.props;
+    const { distributedServers, handleOpen, handleClose } = this.props;
     return(
-      <div>
-        <h1>Comôdos</h1>
-        {distributedServers.map((server, index) => {
-          return(
-            <DistributedServer server={server} key={index} handleOpen={handleOpen} handleClose={handleClose}/>
-          );
-        })}
+      <div style={{ display: 'flex', flexDirection: 'column' }}>
+        <div style={{ display: 'flex', justifyContent: 'center' }}>
+          <h1>Comôdos</h1>
+        </div>
+        <div
+          style={{
+            display: "grid",
+            justifyItems: "center",
+            gridGap: "10px",
+            padding: "0px 16px",
+            gridTemplateColumns: "repeat( auto-fill, minmax(250px, 1fr) )",
+          }}
+        >
+          {distributedServers.map((server, index) => {
+            return(
+              <DistributedServer server={server} key={index} handleOpen={handleOpen} handleClose={handleClose}/>
+            );
+          })}
+        </div>
       </div>
     );
   }
 }
+
+function mapDispatchToProps (dispatch) {
+  return {
+    distributedServerActions: bindActionCreators(DistributedServersAction, dispatch)
+  }
+}
+
+const mapStateToProps = (state, props) => {
+  const { distributedServersReducer, clientReducer } = state.Reducers;
+  return({
+    distributedServers: distributedServersReducer.distributedServers
+  });
+};
+
+DistributedServerList = connect(mapStateToProps, mapDispatchToProps)(DistributedServerList)
 
 export default DistributedServerList;

@@ -49,7 +49,7 @@ class HomePage extends Component {
   }
 
   render() {
-    const { bme280, isModalOpen, component, modalTitle } = this.state;
+    const { msg, isModalOpen, component, modalTitle } = this.state;
     return (
       <div style={{ display: "flex", flexDirection: "column" }}>
         <div style={{ display: "flex", justifyContent: "center" }}>

@@ -53,9 +53,9 @@ class CentralServerSensors extends Component {
 
     const outputSensors = ["Lâmpada da Cozinha", "Lâmpada da Sala"];
 
-    const switches = sensorsList.map((sensor) => {
+    const switches = sensorsList.map((sensor, index) => {
       return (
-        <Card>
+        <Card key={index}>
           <CardContent>
             <Grid component="label" container alignItems="center" spacing={1}>
               <div style={{ width: "100%" }}>

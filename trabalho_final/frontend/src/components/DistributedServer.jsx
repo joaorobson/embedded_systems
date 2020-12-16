@@ -3,9 +3,10 @@ import {
   Card,
   Avatar,
   IconButton,
-  Typography,
   CardHeader,
   CardContent,
+  Grid,
+  Switch
 } from '@material-ui/core';
 import AddIcon from '@material-ui/icons/Add';
 import FormAddRoom from './FormAddRoom';
@@ -16,10 +17,9 @@ class DistributedServer extends Component {
     super(props);
     this.client = mqtt.connect('ws://mqtt.eclipseprojects.io/mqtt');
     this.state = {
-      room_name: null,
-      topic_name: null,
-      input_device_name: null,
-      output_device_name: null,
+      temperature: '',
+      humidity: '',
+      state: ''
     }
   }
 
@@ -27,8 +27,35 @@ class DistributedServer extends Component {
     this.setState({ [event.target.name]: event.target.value });
   }
 
+  onSubmit = () => {
+    const { server } = this.props;
+    this.client.publish(
+      `fse2020/150154003/dispositivos/${server.macAddress}`,
+      JSON.stringify({ room: server.topicName }),
+      (err) => {
+        const { handleClose } = this.props;
+        handleClose();
+        this.client.subscribe(
+          `fse2020/150154003/${server.topicName}/+`,
+          (err) => {
+            this.client.on("message", (topic, message) => {
+              const msg = JSON.parse(message.toString());
+              if(msg.hasOwnProperty('temperature')){
+                this.setState({ temperature: msg.temperature });
+              } else if(msg.hasOwnProperty('humidity')){
+                this.setState({ humidity: msg.humidity });
+              } else if(msg.hasOwnProperty('state')){
+                this.setState({ state: msg.state });
+              }
+            });
+          }
+        );
+      }
+    );
+  }
+
   render(){
-    const { room_name } = this.state;
+    const { temperature, humidity, state } = this.state;
     const { server, handleOpen, handleClose } = this.props;
     return(
       <Card>
@@ -39,18 +66,41 @@ class DistributedServer extends Component {
             </Avatar>
           }
           action={
-            <IconButton onClick={() => {handleOpen(<FormAddRoom handleClose={handleClose} handleChange={this.handleChange}/>, `Cadastrar ${server.macAddress}`)}}>
+            <IconButton onClick={
+              () => {
+                handleOpen(
+                  <FormAddRoom
+                    onSubmit={this.onSubmit}
+                    handleClose={handleClose}
+                    macAddress={server.macAddress}
+                  />,
+                  `Cadastrar ${server.macAddress}`
+                )
+              }
+            }>
               <AddIcon />
             </IconButton>
           }
-          title={room_name}
+          title={server.roomName}
           subheader={server.macAddress}
         />
         <CardContent>
-          <Typography variant="body2" color="textSecondary" component="p">
-            This impressive paella is a perfect party dish and a fun meal to cook together with your
-            guests. Add 1 cup of frozen peas along with the mussels, if you like.
-          </Typography>
+          <div style={{ display: 'flex', flexDirection: 'column' }}>
+            <span>Temperatura: {temperature}°C</span>
+            <span>Umidade: {humidity}%</span>
+            <Grid component="label" container alignItems="center" spacing={1}>
+              <span>{server.inputDeviceName}</span>
+              <Grid item>Off</Grid>
+              <Grid item>
+                <Switch
+                  checked={state}
+                  name={server.inputDeviceName}
+                  disabled={true}
+                />
+              </Grid>
+              <Grid item>On</Grid>
+            </Grid>
+          </div>
         </CardContent>
       </Card>
     );
