@@ -1,13 +1,25 @@
 import React from 'react';
-import ReactDOM from 'react-dom';
+import Router from './Router';
 import './index.css';
-import Rounter from './Router';
+import thunk from 'redux-thunk';
+import ReactDOM from 'react-dom';
+import { Provider } from 'react-redux';
+import Reducers from './index_reducers';
 import reportWebVitals from './reportWebVitals';
+import { createStore, combineReducers, applyMiddleware } from 'redux';
+
+const reducer = combineReducers({
+  Reducers,
+});
+
+const store = createStore(reducer, applyMiddleware(thunk));
 
 ReactDOM.render(
-  <React.StrictMode>
-    <Rounter />
-  </React.StrictMode>,
+  <Provider store={store}>
+    <React.StrictMode>
+      <Router />
+    </React.StrictMode>
+  </Provider>,
   document.getElementById('root')
 );
 
