@@ -36,7 +36,7 @@ class DistributedServerList extends Component {
     return(
       <div style={{ display: 'flex', flexDirection: 'column' }}>
         <div style={{ display: 'flex', justifyContent: 'center' }}>
-          <h1>Comôdos</h1>
+          <h1>Cômodos</h1>
         </div>
         <div
           style={{

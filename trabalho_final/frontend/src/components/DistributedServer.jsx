@@ -75,7 +75,7 @@ class DistributedServer extends Component {
         <CardHeader
           avatar={
             <Avatar aria-label="recipe">
-              R
+              {server.roomName[0]}
             </Avatar>
           }
           action={

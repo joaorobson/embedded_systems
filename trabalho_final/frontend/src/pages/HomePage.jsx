@@ -63,8 +63,8 @@ class HomePage extends Component {
             alignItems: "center",
           }}
         >
-          <h2>Temperatura: {msg["temperature"]}</h2>
-          <h2>Umidade: {msg["humidity"]}</h2>
+          <h2>Temperatura: {msg["temperature"]}°C</h2>
+          <h2>Umidade: {msg["humidity"]}%</h2>
         </div>
         <CustomizedSwitches client={this.client} />
         <DistributedServerList handleOpen={this.handleOpen} handleClose={this.handleClose} />

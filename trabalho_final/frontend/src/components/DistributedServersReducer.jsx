@@ -6,8 +6,7 @@ const distributedServersReducer = (state = initialState, action) => {
   switch (action.type) {
     case 'ADD_DISTRIBUTED_SERVER':
       const alreadyRegistered = Boolean(state.distributedServers.find(server => server['macAddress'] === action.data.macAddress));
-      console.log("ASDF", action.data, alreadyRegistered);
-      if(alreadyRegistered){
+      if(alreadyRegistered || state.distributedServers.length > 5){
         return state;
       } else {
         return {
