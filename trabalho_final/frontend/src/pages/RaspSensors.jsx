@@ -3,6 +3,9 @@ import Card from "@material-ui/core/Card";
 import CardContent from "@material-ui/core/CardContent";
 import Switch from "@material-ui/core/Switch";
 import Grid from "@material-ui/core/Grid";
+import { connect } from 'react-redux';
+import { bindActionCreators } from 'redux';
+import * as InputDevicesActions from '../components/InputDevicesActions';
 
 class CentralServerSensors extends Component {
   constructor(props) {
@@ -24,11 +27,14 @@ class CentralServerSensors extends Component {
 
   componentDidMount() {
     this.client.on("message", (topic, message) => {
-      console.log(JSON.parse(message.toString()));
-      this.setState((prevState) => ({
-        ...prevState,
-        ...JSON.parse(message.toString())["devices"],
-      }));
+      const { inputDevicesActions } = this.props;
+      this.setState(
+        (prevState) => ({
+          ...prevState,
+          ...JSON.parse(message.toString())["devices"],
+        }),
+        () => {inputDevicesActions.updateInputDevices(this.state, this.client)}
+      );
     });
   }
 
@@ -83,7 +89,6 @@ class CentralServerSensors extends Component {
   }
 
   render() {
-    console.log(this.state);
     return (
       <div
         style={{
@@ -99,5 +104,13 @@ class CentralServerSensors extends Component {
     );
   }
 }
+
+function mapDispatchToProps (dispatch) {
+  return {
+    distributedServerActions: bindActionCreators(InputDevicesActions, dispatch)
+  }
+}
+
+CentralServerSensors = connect(null, mapDispatchToProps)(CentralServerSensors)
 
 export default CentralServerSensors;

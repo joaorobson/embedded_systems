@@ -8,6 +8,9 @@ import {
   Grid,
   Switch
 } from '@material-ui/core';
+import { connect } from 'react-redux';
+import { bindActionCreators } from 'redux';
+import * as InputDevicesActions from './InputDevicesActions';
 import AddIcon from '@material-ui/icons/Add';
 import FormAddRoom from './FormAddRoom';
 import * as mqtt from 'mqtt';
@@ -46,7 +49,7 @@ class DistributedServer extends Component {
       `fse2020/150154003/dispositivos/${server.macAddress}`,
       JSON.stringify({ room: server.topicName }),
       (err) => {
-        const { handleClose } = this.props;
+        const { handleClose, inputDevicesActions } = this.props;
         handleClose();
         this.client.subscribe(
           `fse2020/150154003/${server.topicName}/+`,
@@ -59,6 +62,7 @@ class DistributedServer extends Component {
                 this.setState({ humidity: msg.humidity });
               } else if(msg.hasOwnProperty('state')){
                 this.setState({ stateInput: Boolean(msg.state) });
+                inputDevicesActions.updateInputDevices({[`state_${server.macAddress}`]: Boolean(msg.state)}, this.client);
               }
             });
           }
@@ -131,5 +135,13 @@ class DistributedServer extends Component {
     );
   }
 }
+
+function mapDispatchToProps (dispatch) {
+  return {
+    inputDevicesActions: bindActionCreators(InputDevicesActions, dispatch)
+  }
+}
+
+DistributedServer = connect(null, mapDispatchToProps)(DistributedServer)
 
 export default DistributedServer;

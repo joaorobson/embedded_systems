@@ -20,6 +20,7 @@ class HomePage extends Component {
     });
     this.state = {
       msg: {},
+      alarm: false,
       modalTitle: '',
       component: null,
       isModalOpen: false,
@@ -28,7 +29,8 @@ class HomePage extends Component {
 
   componentDidMount() {
     this.client.on("message", (topic, message) => {
-      this.setState({ msg: JSON.parse(message.toString())["bme280"] });
+      const centralMessage = JSON.parse(message.toString());
+      this.setState({ msg: centralMessage["bme280"], alarm: centralMessage['alarm'] });
     });
   }
 
@@ -49,7 +51,7 @@ class HomePage extends Component {
   }
 
   render() {
-    const { msg, isModalOpen, component, modalTitle } = this.state;
+    const { msg, alarm, isModalOpen, component, modalTitle } = this.state;
     return (
       <div style={{ display: "flex", flexDirection: "column" }}>
         <div style={{ display: "flex", justifyContent: "center" }}>
@@ -65,6 +67,7 @@ class HomePage extends Component {
         >
           <h2>Temperatura: {msg["temperature"]}°C</h2>
           <h2>Umidade: {msg["humidity"]}%</h2>
+          <h2>Alarme: {alarm ? 'Ligado' : 'Desligado'}</h2>
         </div>
         <CustomizedSwitches client={this.client} />
         <DistributedServerList handleOpen={this.handleOpen} handleClose={this.handleClose} />
