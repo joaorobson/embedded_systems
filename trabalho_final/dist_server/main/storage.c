@@ -13,22 +13,22 @@ char* read_nvs(char* key)
     ESP_ERROR_CHECK(nvs_flash_init());
 
     size_t required_size;
-    char* value;
     nvs_handle default_partition_handle;
     
     // Abre o acesso à partição nvs
     esp_err_t res_nvs = nvs_open("storage", NVS_READONLY, &default_partition_handle);
     
+    esp_err_t res = nvs_get_str(default_partition_handle, key, NULL, &required_size);
+
+    char* value = malloc(required_size);
+
     if(res_nvs == ESP_ERR_NVS_NOT_FOUND)
     {
         ESP_LOGE("NVS", "Namespace: storage, não encontrado");
     }
     else
     {
-        nvs_get_str(default_partition_handle, key, NULL, &required_size);
-        char* value = malloc(required_size);
-
-        esp_err_t res = nvs_get_str(default_partition_handle, key, value, &required_size);
+        res = nvs_get_str(default_partition_handle, key, value, &required_size);
 
         switch (res)
         {

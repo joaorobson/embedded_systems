@@ -10,6 +10,7 @@ char* get_room_name(cJSON* json);
 char* process_data(char* json_str);
 void init_button();
 int check_key(cJSON* json, char* key);
+char* init_room_name(char* room_name);
 
 void IRAM_ATTR gpio_isr_handler(void *args);
 #endif

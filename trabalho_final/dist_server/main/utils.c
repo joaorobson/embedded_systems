@@ -57,6 +57,17 @@ char* get_room_name(cJSON* json){
     return "";
 }
 
+char* init_room_name(char* room_name){
+    strcpy(room_name, read_nvs("room_name"));
+
+    if(strlen(room_name) != 0){
+        return room_name;
+    }
+    
+    strcpy(room_name, "");
+
+    return room_name;
+}
 
 void process_data(char* json_str){
 

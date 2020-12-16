@@ -24,8 +24,6 @@ xSemaphoreHandle mqtt_connection_semaphore;
 
 char room[50];
 
-
-
 void init_mqtt(void * params)
 {
   while(true)
@@ -37,9 +35,13 @@ void init_mqtt(void * params)
       
       char is_registered[10];
       strcpy(is_registered, read_nvs("is_registered"));
+
       if(strcmp(is_registered, "s") != 0){
         publish_message(get_esp_init_topic(), "{}");
         write_on_nvs("is_registered", "s");
+      }
+      else{
+        init_room_name(room);
       }
     }
   }
