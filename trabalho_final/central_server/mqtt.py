@@ -20,8 +20,8 @@ class MQTT:
         self.client.loop_start()
 
 
-    def set_devices(self, devices):
-        self.devices = devices
+    def set_state(self, state):
+        self.state = state 
 
     def on_connect(self, client, userdata, flags, rc):
         self.client.subscribe(GENERAL_TOPIC)
@@ -37,10 +37,11 @@ class MQTT:
             return -1 
         
         if msg.topic == FRONTEND_TOPIC:
-            if "device_name" in msg:
-                self.devices.switch_output_device_state(msg_data["device_name"])
-            elif "alarm" in msg:
+            if "device_name" in msg_data:
+                self.state['devices'].switch_output_device_state(msg_data["device_name"])
+            elif "alarm" in msg_data:
                 self.player.decide_play_alarm(msg_data["alarm"])
+                self.state['alarm'] = msg_data["alarm"]
 
-        if msg.topic.startswith(GENERAL_TOPIC):
+        if GENERAL_TOPIC[:-1] in msg.topic:
              self.csv_handler.write_on_csv(msg.topic, msg_data)

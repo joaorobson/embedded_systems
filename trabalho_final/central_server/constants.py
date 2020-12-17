@@ -3,8 +3,8 @@ FRONTEND_TOPIC = "fse2020/150154003/frontend"
 GENERAL_TOPIC = "fse2020/150154003/#"
 FILENAME = "log.csv"
 
-commands_names = {
-	"alarm": "%s alarme",
+COMMANDS_NAME = {
+	"alarm": "Ativar/Desativar alarme",
 	"mac": "Cadastro da esp32 no frontend",
 	"room": "Envio do nome do tópico usado pela esp32",
 	"temperature": "Leitura de temperatura na esp32",

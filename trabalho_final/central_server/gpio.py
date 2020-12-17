@@ -55,16 +55,5 @@ class InputOutputDevices:
             GPIO.output(pin, 1 - current_state)
             self.devices_state[device_name] = 1 - current_state
                         
-
-    def check_activate_alarm(self):
-        activate_alarm = any([self.devices_state[x[0]] for x in self.input_sensors])
-        if activate_alarm and self.last_activate_alarm != activate_alarm:
-            self.full_state['alarm'] = activate_alarm
-            self.mqtt.send_data(CENTRAL_TOPIC, json.dumps(self.full_state))
-            self.last_activate_alarm = activate_alarm
-        elif not activate_alarm and self.last_activate_alarm != activate_alarm:
-            self.full_state['alarm'] = activate_alarm
-            self.last_activate_alarm = activate_alarm
-
     def set_output_devices_value(self, pin, value):
         GPIO.output(pin, value)

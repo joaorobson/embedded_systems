@@ -29,7 +29,6 @@ def read_security_sensors(devices, state):
     while not run_read_security_sensors and run_main:
         condition_read_security_sensors.wait()
         devices.read_sensors_values()
-        state['alarm'] = devices.check_activate_alarm()
         run_read_security_sensors = False
     lock_read_security_sensors.release()
 
@@ -47,6 +46,7 @@ def send_data(mqtt, state):
     global run_send_data
     while not run_send_data and run_main:
         condition_send_data.wait()
+        print(json.dumps(state))
         mqtt.send_data(CENTRAL_TOPIC, json.dumps(state))
         run_send_data = False
     lock_send_data.release()
@@ -91,7 +91,7 @@ if __name__ == '__main__':
     mqtt = MQTT()
     devices = InputOutputDevices(state, mqtt)
     
-    mqtt.set_devices(devices)
+    mqtt.set_state(state)
 
     check_security_sensors = Thread(target=read_security_sensors, args=(devices, state,))
     read_temperature_humidity = Thread(target=read_bme280_sensor, args=(sensor_bme280, state,))
