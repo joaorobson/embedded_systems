@@ -14,7 +14,7 @@ class CSV:
         else:
             commands = []
             for key, value in data.items():
-                command = commands_names.get(key, "")
+                command = COMMANDS_NAME.get(key, "")
                 commands.append(command)
             return " ".join(commands)
         

@@ -46,7 +46,6 @@ def send_data(mqtt, state):
     global run_send_data
     while not run_send_data and run_main:
         condition_send_data.wait()
-        print(json.dumps(state))
         mqtt.send_data(CENTRAL_TOPIC, json.dumps(state))
         run_send_data = False
     lock_send_data.release()

@@ -28,6 +28,7 @@ class MQTT:
 
     def send_data(self, topic, state):
         self.client.publish(topic, state)
+        self.csv_handler.write_on_csv(topic, state)
 
     def process_message(self, client, userdata, msg):
         try:
