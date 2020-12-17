@@ -109,7 +109,7 @@ void handle_mqtt_messages(void * params)
 
       }
 
-      vTaskDelay(3000 / portTICK_PERIOD_MS);
+      vTaskDelay(30000 / portTICK_PERIOD_MS);
     }
   }
 }
@@ -117,7 +117,6 @@ void handle_mqtt_messages(void * params)
 
 void app_main()
 {
-
     // Inicializa o NVS
     esp_err_t ret = nvs_flash_init();
 
