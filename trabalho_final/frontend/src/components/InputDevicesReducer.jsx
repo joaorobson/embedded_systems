@@ -15,22 +15,23 @@ const inputDevicesReducer = (state = initialState, action) => {
     case 'UPDATE_DEVICES':
       let nextState = {
         ...state,
-        ...action.data
+        ...action.data.data
       }
       let activateAlarm = false;
       for (const [key, value] of Object.entries(nextState)) {
-        console.log(`${key}: ${value}`);
-        activateAlarm = value || activateAlarm;
+        if(key !== 'alarm'){
+          activateAlarm = value || activateAlarm;
+        }
       }
       if(activateAlarm !== nextState.alarm){
         if(activateAlarm){
-          action.mqttClient.publish(
+          action.data.mqttClient.publish(
             'fse2020/150154003/frontend',
             JSON.stringify({ alarm: activateAlarm })
           );
           nextState.alarm = activateAlarm;
         } else {
-          action.mqttClient.publish(
+          action.data.mqttClient.publish(
             'fse2020/150154003/frontend',
             JSON.stringify({ alarm: activateAlarm })
           );

@@ -27,13 +27,12 @@ class CentralServerSensors extends Component {
 
   componentDidMount() {
     this.client.on("message", (topic, message) => {
-      const { inputDevicesActions } = this.props;
       this.setState(
         (prevState) => ({
           ...prevState,
           ...JSON.parse(message.toString())["devices"],
         }),
-        () => {inputDevicesActions.updateInputDevices(this.state, this.client)}
+        () => {this.props.inputDevicesActions.updateInputDevices(this.state, this.client)}
       );
     });
   }
@@ -107,7 +106,7 @@ class CentralServerSensors extends Component {
 
 function mapDispatchToProps (dispatch) {
   return {
-    distributedServerActions: bindActionCreators(InputDevicesActions, dispatch)
+    inputDevicesActions: bindActionCreators(InputDevicesActions, dispatch)
   }
 }
 

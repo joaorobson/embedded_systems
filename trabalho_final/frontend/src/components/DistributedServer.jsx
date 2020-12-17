@@ -61,8 +61,10 @@ class DistributedServer extends Component {
               } else if(msg.hasOwnProperty('humidity')){
                 this.setState({ humidity: msg.humidity });
               } else if(msg.hasOwnProperty('state')){
-                this.setState({ stateInput: Boolean(msg.state) });
-                inputDevicesActions.updateInputDevices({[`state_${server.macAddress}`]: Boolean(msg.state)}, this.client);
+                this.setState(
+                  { stateInput: Boolean(msg.state) },
+                  () => {inputDevicesActions.updateInputDevices({[`state_${server.macAddress}`]: Boolean(msg.state)}, this.client)}
+                );
               }
             });
           }
