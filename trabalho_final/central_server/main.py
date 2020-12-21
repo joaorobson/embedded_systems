@@ -90,7 +90,7 @@ if __name__ == '__main__':
     mqtt = MQTT()
     devices = InputOutputDevices(state, mqtt)
     
-    mqtt.set_state(state)
+    mqtt.set_state(state, devices)
 
     check_security_sensors = Thread(target=read_security_sensors, args=(devices, state,))
     read_temperature_humidity = Thread(target=read_bme280_sensor, args=(sensor_bme280, state,))

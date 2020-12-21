@@ -20,8 +20,9 @@ class MQTT:
         self.client.loop_start()
 
 
-    def set_state(self, state):
+    def set_state(self, state, devices_handler):
         self.state = state 
+        self.devices_handler = devices_handler
 
     def on_connect(self, client, userdata, flags, rc):
         self.client.subscribe(GENERAL_TOPIC)
@@ -39,7 +40,7 @@ class MQTT:
         
         if msg.topic == FRONTEND_TOPIC:
             if "device_name" in msg_data:
-                self.state['devices'].switch_output_device_state(msg_data["device_name"])
+                self.devices_handler.switch_output_device_state(msg_data["device_name"])
             elif "alarm" in msg_data:
                 self.player.decide_play_alarm(msg_data["alarm"])
                 self.state['alarm'] = msg_data["alarm"]

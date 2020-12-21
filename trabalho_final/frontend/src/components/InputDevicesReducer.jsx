@@ -5,9 +5,7 @@ const initialState = {
   "Porta Cozinha": false,
   "Janela Cozinha": false,
   "Porta Sala": false,
-  "Janela Sala": false,
-  "Lâmpada Cozinha": false,
-  "Lâmpada Sala": false
+  "Janela Sala": false
 };
 
 const inputDevicesReducer = (state = initialState, action) => {
@@ -19,24 +17,22 @@ const inputDevicesReducer = (state = initialState, action) => {
       }
       let activateAlarm = false;
       for (const [key, value] of Object.entries(nextState)) {
-        if(key !== 'alarm'){
+        if(key !== 'alarm' && key !== 'Lâmpada Cozinha' && key !== 'Lâmpada Sala'){
           activateAlarm = value || activateAlarm;
         }
       }
-      if(activateAlarm !== nextState.alarm){
-        if(activateAlarm){
+      if(activateAlarm && activateAlarm !== nextState.alarm){
           action.data.mqttClient.publish(
             'fse2020/150154003/frontend',
             JSON.stringify({ alarm: activateAlarm })
           );
           nextState.alarm = activateAlarm;
-        } else {
+      } else if(!activateAlarm && activateAlarm !== nextState.alarm){
           action.data.mqttClient.publish(
             'fse2020/150154003/frontend',
             JSON.stringify({ alarm: activateAlarm })
           );
           nextState.alarm = activateAlarm;
-        }
       }
       return nextState
 

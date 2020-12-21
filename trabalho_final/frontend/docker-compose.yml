@@ -5,7 +5,6 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    network_mode: host
     container_name: frontend
     command: yarn start
     volumes:
